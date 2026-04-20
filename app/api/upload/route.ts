@@ -206,7 +206,12 @@ export async function POST(req: NextRequest) {
         } catch (e) {
           throw new Error(`creative: ${e instanceof Error ? e.message : String(e)} | page_id=${config.pageId} | adaccount=${adAccountId}`);
         }
-        const adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
+        let adId: string;
+        try {
+          adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
+        } catch (e) {
+          throw new Error(`ad: ${e instanceof Error ? e.message : String(e)} | adset=${config.adsetId} | creative=${creativeId} | adaccount=${adAccountId}`);
+        }
 
         await db.insert(upload_history).values({
           account_id: accountId,
