@@ -81,31 +81,67 @@ async function createSingleCreative(
   return json.id as string;
 }
 
-async function createGroupCreative(
+type GroupMember = { fileIdx: number; placement: "feed" | "stories" };
+
+async function createPlacementCreative(
   adAccountId: string,
   token: string,
   pageId: string,
   copy: AdCopy,
+  members: GroupMember[],
   mediaRefs: MediaRef[],
   advantagePlus: boolean
 ): Promise<string> {
-  const hashes = mediaRefs.filter((m) => m.type === "image").map((m) => (m as { type: "image"; hash: string }).hash);
-  const videoIds = mediaRefs.filter((m) => m.type === "video").map((m) => (m as { type: "video"; video_id: string }).video_id);
+  const feedMember = members.find((m) => m.placement === "feed") ?? members[0];
+  const storiesMember = members.find((m) => m.placement === "stories");
+  const feedMedia = mediaRefs[feedMember.fileIdx];
 
-  const assetFeedSpec: Record<string, unknown> = {
-    bodies: [{ text: copy.primaryText || " " }],
-    titles: [{ text: copy.headline }],
-    link_urls: [{ website_url: copy.url }],
-    call_to_action_types: [copy.cta],
-  };
-  if (copy.linkDescription) assetFeedSpec.descriptions = [{ text: copy.linkDescription }];
-  if (hashes.length > 0) assetFeedSpec.images = hashes.map((h) => ({ hash: h }));
-  if (videoIds.length > 0) assetFeedSpec.videos = videoIds.map((id) => ({ video_id: id }));
+  let objectStorySpec: Record<string, unknown>;
+  if (feedMedia.type === "image") {
+    objectStorySpec = {
+      page_id: pageId,
+      link_data: {
+        image_hash: feedMedia.hash,
+        link: copy.url,
+        message: copy.primaryText,
+        name: copy.headline,
+        description: copy.linkDescription || undefined,
+        call_to_action: { type: copy.cta },
+      },
+    };
+  } else {
+    objectStorySpec = {
+      page_id: pageId,
+      video_data: {
+        video_id: feedMedia.video_id,
+        title: copy.headline,
+        message: copy.primaryText,
+        link_description: copy.linkDescription || undefined,
+        call_to_action: { type: copy.cta, value: { link: copy.url } },
+      },
+    };
+  }
 
   const body = new URLSearchParams();
-  body.set("asset_feed_spec", JSON.stringify(assetFeedSpec));
-  body.set("object_type", "SHARE");
-  body.set("page_id", pageId);
+  body.set("object_story_spec", JSON.stringify(objectStorySpec));
+
+  if (storiesMember) {
+    const storiesMedia = mediaRefs[storiesMember.fileIdx];
+    const placementSpec = [
+      {
+        publisher_platforms: ["instagram"],
+        instagram_positions: ["story", "reels"],
+        ...(storiesMedia.type === "image" ? { image_hash: storiesMedia.hash } : { video_id: storiesMedia.video_id }),
+      },
+      {
+        publisher_platforms: ["facebook"],
+        facebook_positions: ["story"],
+        ...(storiesMedia.type === "image" ? { image_hash: storiesMedia.hash } : { video_id: storiesMedia.video_id }),
+      },
+    ];
+    body.set("placement_asset_customization_spec", JSON.stringify(placementSpec));
+  }
+
   if (advantagePlus) {
     body.set("degrees_of_freedom_spec", JSON.stringify({
       creative_features_spec: { standard_enhancements: { enroll_status: "OPT_IN" } },
@@ -161,7 +197,7 @@ export async function POST(req: NextRequest) {
     adNamePattern: string;
     startTime?: string;
     advantagePlus: boolean;
-    groups: number[][];
+    groups: { fileIdx: number; placement: "feed" | "stories" }[][];
     media: MediaRef[];
   };
 
@@ -172,11 +208,11 @@ export async function POST(req: NextRequest) {
   const adAccountId = account.ad_account_id;
   const results: { name: string; adId: string | null; error: string | null }[] = [];
 
-  const groupedIndices = new Set(config.groups.flat());
+  const groupedIndices = new Set(config.groups.flat().map((m) => m.fileIdx));
 
   type AdItem =
     | { type: "single"; mediaIdx: number; copyIdx: number }
-    | { type: "group"; mediaIndices: number[]; copyIdx: number };
+    | { type: "group"; members: { fileIdx: number; placement: "feed" | "stories" }[]; copyIdx: number };
 
   const adItems: AdItem[] = [];
   let copyIdx = 0;
@@ -187,7 +223,7 @@ export async function POST(req: NextRequest) {
     }
   }
   for (const group of config.groups) {
-    adItems.push({ type: "group", mediaIndices: group, copyIdx: copyIdx++ });
+    adItems.push({ type: "group", members: group, copyIdx: copyIdx++ });
   }
 
   for (const item of adItems) {
@@ -244,14 +280,14 @@ export async function POST(req: NextRequest) {
         results.push({ name: adName, adId: null, error: message });
       }
     } else {
-      const groupRefs = item.mediaIndices.map((i) => config.media[i]);
-      const firstName = groupRefs[0].filename.replace(/\.[^.]+$/, "");
+      const feedMember = item.members.find((m) => m.placement === "feed") ?? item.members[0];
+      const firstName = config.media[feedMember.fileIdx].filename.replace(/\.[^.]+$/, "");
       adName = resolvePattern(config.adNamePattern || "{filename}", firstName, item.copyIdx, config.campaignName, config.adsetName);
 
       try {
         let creativeId: string;
         try {
-          creativeId = await createGroupCreative(adAccountId, token, config.pageId, copy, groupRefs, config.advantagePlus);
+          creativeId = await createPlacementCreative(adAccountId, token, config.pageId, copy, item.members, config.media, config.advantagePlus);
         } catch (e) {
           throw new Error(`group-creative: ${e instanceof Error ? e.message : String(e)} | page_id=${config.pageId} | adaccount=${adAccountId}`);
         }

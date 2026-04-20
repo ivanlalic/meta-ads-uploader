@@ -54,7 +54,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<Record<number, string>>({});
   const [selectedFileIndices, setSelectedFileIndices] = useState<Set<number>>(new Set());
-  const [groups, setGroups] = useState<number[][]>([]); // arrays of file indices grouped together
+  const [groups, setGroups] = useState<{ fileIdx: number; placement: "feed" | "stories" }[][]>([]);
 
   // Campaigns & adsets
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -152,7 +152,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
     setPerAdCopy((prev) => prev.filter((_, i) => i !== index));
     setPreviews((prev) => { const next = { ...prev }; delete next[index]; return next; });
     setSelectedFileIndices((prev) => { const next = new Set(prev); next.delete(index); return next; });
-    setGroups((prev) => prev.map((g) => g.filter((i) => i !== index).map((i) => i > index ? i - 1 : i)).filter((g) => g.length > 1));
+    setGroups((prev) => prev.map((g) => g.filter((m) => m.fileIdx !== index).map((m) => ({ ...m, fileIdx: m.fileIdx > index ? m.fileIdx - 1 : m.fileIdx }))).filter((g) => g.length > 1));
   }
 
   function toggleFileSelect(index: number) {
@@ -167,26 +167,30 @@ export function UploadClient({ defaults }: UploadClientProps) {
   function groupSelected() {
     if (selectedFileIndices.size < 2) return;
     const indices = Array.from(selectedFileIndices).sort((a, b) => a - b);
-    // Remove selected from any existing groups
     setGroups((prev) => {
-      const cleaned = prev.map((g) => g.filter((i) => !selectedFileIndices.has(i))).filter((g) => g.length > 1);
-      return [...cleaned, indices];
+      const cleaned = prev.map((g) => g.filter((m) => !selectedFileIndices.has(m.fileIdx))).filter((g) => g.length > 1);
+      const newGroup = indices.map((idx, i) => ({ fileIdx: idx, placement: (i === 0 ? "feed" : "stories") as "feed" | "stories" }));
+      return [...cleaned, newGroup];
     });
     setSelectedFileIndices(new Set());
+  }
+
+  function setPlacement(groupIdx: number, fileIdx: number, placement: "feed" | "stories") {
+    setGroups((prev) => prev.map((g, gi) => gi !== groupIdx ? g : g.map((m) => m.fileIdx === fileIdx ? { ...m, placement } : m)));
   }
 
   function ungroup(groupIndex: number) {
     setGroups((prev) => prev.filter((_, i) => i !== groupIndex));
   }
 
-  const groupedIndices = new Set(groups.flat());
+  const groupedIndices = new Set(groups.flat().map((m) => m.fileIdx));
 
   // Ad items: singles (ungrouped) + groups
-  const adItems: Array<{ type: "single"; fileIdx: number } | { type: "group"; groupIdx: number; fileIndices: number[] }> = [];
+  const adItems: Array<{ type: "single"; fileIdx: number } | { type: "group"; groupIdx: number; members: { fileIdx: number; placement: "feed" | "stories" }[] }> = [];
   for (let i = 0; i < files.length; i++) {
     if (!groupedIndices.has(i)) adItems.push({ type: "single", fileIdx: i });
   }
-  groups.forEach((g, gi) => adItems.push({ type: "group", groupIdx: gi, fileIndices: g }));
+  groups.forEach((g, gi) => adItems.push({ type: "group", groupIdx: gi, members: g }));
 
   function updatePerAdCopy(index: number, field: keyof AdCopy, value: string) {
     setPerAdCopy((prev) => { const next = [...prev]; next[index] = { ...next[index], [field]: value }; return next; });
@@ -381,7 +385,8 @@ export function UploadClient({ defaults }: UploadClientProps) {
             <div className="border border-[#2a2a2a] rounded-lg divide-y divide-[#2a2a2a]">
               {files.map((file, i) => {
                 const isInGroup = groupedIndices.has(i);
-                const groupIdx = groups.findIndex((g) => g.includes(i));
+                const groupIdx = groups.findIndex((g) => g.some((m) => m.fileIdx === i));
+                const member = isInGroup ? groups[groupIdx].find((m) => m.fileIdx === i) : null;
                 return (
                   <div key={i} className={`flex items-center gap-3 px-4 py-3 ${isInGroup ? "bg-[#3b82f6]/5" : ""}`}>
                     <input
@@ -408,6 +413,16 @@ export function UploadClient({ defaults }: UploadClientProps) {
                         {isInGroup && <span className="text-[#3b82f6] ml-2">Grupo {groupIdx + 1}</span>}
                       </p>
                     </div>
+                    {isInGroup && member && (
+                      <select
+                        value={member.placement}
+                        onChange={(e) => setPlacement(groupIdx, i, e.target.value as "feed" | "stories")}
+                        className="text-xs font-mono bg-[#1c1c1c] border border-[#2a2a2a] rounded px-2 py-1 text-[#aaa] focus:outline-none focus:border-[#3b82f6] mr-2"
+                      >
+                        <option value="feed">Feed (1:1 / 4:5)</option>
+                        <option value="stories">Stories / 9:16</option>
+                      </select>
+                    )}
                     {isInGroup && (
                       <button onClick={() => ungroup(groupIdx)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] transition-colors mr-2">
                         desagrupar
@@ -624,10 +639,10 @@ export function UploadClient({ defaults }: UploadClientProps) {
                   </thead>
                   <tbody className="divide-y divide-[#2a2a2a]">
                     {adItems.map((item, i) => {
-                      const thumb = item.type === "single" ? previews[item.fileIdx] : previews[item.fileIndices[0]];
+                      const thumb = item.type === "single" ? previews[item.fileIdx] : previews[item.members[0].fileIdx];
                       const isVideo = item.type === "single"
                         ? files[item.fileIdx]?.type.startsWith("video/")
-                        : item.fileIndices.some((idx) => files[idx]?.type.startsWith("video/"));
+                        : item.members.some((m) => files[m.fileIdx]?.type.startsWith("video/"));
                       return (
                         <tr key={i} className="bg-[#0a0a0a]">
                           <td className="px-3 py-2">
@@ -637,7 +652,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
                                   {isVideo ? <FileVideo className="w-4 h-4 text-[#3b82f6]" /> : <FileImage className="w-4 h-4 text-[#555]" />}
                                 </div>
                               )}
-                              {item.type === "group" && <span className="absolute -top-1 -right-1 bg-[#3b82f6] text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">{item.fileIndices.length}</span>}
+                              {item.type === "group" && <span className="absolute -top-1 -right-1 bg-[#3b82f6] text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">{item.members.length}</span>}
                             </div>
                           </td>
                           {(["headline", "primaryText", "linkDescription", "url"] as const).map((field) => (
@@ -746,10 +761,10 @@ export function UploadClient({ defaults }: UploadClientProps) {
                 {adItems.map((item, i) => {
                   const copy = copyMode === "common" ? commonCopy : (perAdCopy[i] ?? commonCopy);
                   const result = results[i];
-                  const file = item.type === "single" ? files[item.fileIdx] : files[item.fileIndices[0]];
+                  const file = item.type === "single" ? files[item.fileIdx] : files[item.members[0].fileIdx];
                   const filename = file?.name.replace(/\.[^.]+$/, "") ?? "";
                   const resolvedName = resolvePatternPreview(adNamePattern, selectedCampaign?.name ?? "", selectedAdset?.name ?? "").replace("nombre_archivo", filename);
-                  const tipo = item.type === "group" ? `multi-ratio (${item.fileIndices.length})` : (file?.type.startsWith("video/") ? "video" : "imagen");
+                  const tipo = item.type === "group" ? `multi-ratio (${item.members.length})` : (file?.type.startsWith("video/") ? "video" : "imagen");
                   return (
                     <tr key={i} className="bg-[#0a0a0a]">
                       <td className="px-3 py-2 text-[#f5f5f5] max-w-[160px] truncate">{resolvedName}</td>
