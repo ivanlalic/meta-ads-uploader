@@ -79,6 +79,8 @@ export function UploadClient({ defaults }: UploadClientProps) {
   const [newAdsetName, setNewAdsetName] = useState("");
   const [newAdsetSourceId, setNewAdsetSourceId] = useState("");
   const [creatingAdset, setCreatingAdset] = useState(false);
+  const [sourceAdsets, setSourceAdsets] = useState<(AdSet & { campaignName: string })[]>([]);
+  const [loadingSourceAdsets, setLoadingSourceAdsets] = useState(false);
 
   // Copy
   const [copyMode, setCopyMode] = useState<"common" | "unique">("common");
@@ -213,6 +215,25 @@ export function UploadClient({ defaults }: UploadClientProps) {
       toast.error(String(e));
     } finally {
       setCreatingCampaign(false);
+    }
+  }
+
+  async function openCreateAdset() {
+    setShowCreateAdset(true);
+    if (sourceAdsets.length > 0) return;
+    setLoadingSourceAdsets(true);
+    try {
+      const all: (AdSet & { campaignName: string })[] = [];
+      await Promise.all(
+        campaigns.map(async (c) => {
+          const r = await fetch(`/api/meta/adsets?campaignId=${c.id}`);
+          const d = await r.json();
+          (d.data ?? []).forEach((a: AdSet) => all.push({ ...a, campaignName: c.name }));
+        })
+      );
+      setSourceAdsets(all);
+    } finally {
+      setLoadingSourceAdsets(false);
     }
   }
 
@@ -463,18 +484,18 @@ export function UploadClient({ defaults }: UploadClientProps) {
             )}
 
             {/* Create adset (duplicate) */}
-            {selectedCampaignId && adsets.length > 0 && (
+            {selectedCampaignId && (
               <>
-                <button onClick={() => setShowCreateAdset((v) => !v)} className="flex items-center gap-1.5 text-xs font-mono text-[#555] hover:text-[#3b82f6] transition-colors">
+                <button onClick={openCreateAdset} className="flex items-center gap-1.5 text-xs font-mono text-[#555] hover:text-[#3b82f6] transition-colors">
                   <Plus className="w-3 h-3" /> Nuevo Ad Set (duplicar)
                 </button>
                 {showCreateAdset && (
                   <div className="border border-[#2a2a2a] rounded-md p-3 space-y-2 bg-[#141414]">
                     <div className="space-y-1">
                       <p className="text-xs font-mono text-[#555]">Plantilla (copia targeting y presupuesto)</p>
-                      <select value={newAdsetSourceId} onChange={(e) => setNewAdsetSourceId(e.target.value)} className={selectClass}>
-                        <option value="">Seleccioná plantilla...</option>
-                        {adsets.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                      <select value={newAdsetSourceId} onChange={(e) => setNewAdsetSourceId(e.target.value)} className={selectClass} disabled={loadingSourceAdsets}>
+                        <option value="">{loadingSourceAdsets ? "Cargando..." : "Seleccioná plantilla..."}</option>
+                        {sourceAdsets.map((a) => <option key={a.id} value={a.id}>{a.campaignName} → {a.name}</option>)}
                       </select>
                     </div>
                     <input type="text" placeholder="Nombre del nuevo Ad Set" value={newAdsetName} onChange={(e) => setNewAdsetName(e.target.value)} className={inputClass} />
