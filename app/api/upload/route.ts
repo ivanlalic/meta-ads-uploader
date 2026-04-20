@@ -249,8 +249,18 @@ export async function POST(req: NextRequest) {
       adName = resolvePattern(config.adNamePattern || "{filename}", firstName, item.copyIdx, config.campaignName, config.adsetName);
 
       try {
-        const creativeId = await createGroupCreative(adAccountId, token, config.pageId, copy, groupRefs, config.advantagePlus);
-        const adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
+        let creativeId: string;
+        try {
+          creativeId = await createGroupCreative(adAccountId, token, config.pageId, copy, groupRefs, config.advantagePlus);
+        } catch (e) {
+          throw new Error(`group-creative: ${e instanceof Error ? e.message : String(e)} | page_id=${config.pageId} | adaccount=${adAccountId}`);
+        }
+        let adId: string;
+        try {
+          adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
+        } catch (e) {
+          throw new Error(`group-ad: ${e instanceof Error ? e.message : String(e)} | adset=${config.adsetId} | creative=${creativeId} | adaccount=${adAccountId}`);
+        }
 
         await db.insert(upload_history).values({
           account_id: accountId,
