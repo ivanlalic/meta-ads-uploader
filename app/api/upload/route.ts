@@ -14,6 +14,10 @@ type AdCopy = {
   cta: string;
 };
 
+type MediaRef =
+  | { type: "image"; hash: string; filename: string }
+  | { type: "video"; video_id: string; filename: string };
+
 function resolvePattern(
   pattern: string,
   filename: string,
@@ -30,44 +34,12 @@ function resolvePattern(
     .replace(/\{adset\}/g, adsetName);
 }
 
-async function uploadImage(adAccountId: string, token: string, file: File): Promise<{ hash: string }> {
-  const bytes = await file.arrayBuffer();
-  const b64 = Buffer.from(bytes).toString("base64");
-  const body = new URLSearchParams();
-  body.set("bytes", b64);
-  body.set("access_token", token);
-  const res = await fetch(`${BASE_URL}/${adAccountId}/adimages`, { method: "POST", body });
-  const json = await res.json();
-  if (json.error) throw new Error(json.error.message);
-  const images = json.images as Record<string, { hash: string }>;
-  return Object.values(images)[0];
-}
-
-async function uploadVideo(adAccountId: string, token: string, file: File): Promise<{ video_id: string }> {
-  const formData = new FormData();
-  formData.append("source", file);
-  formData.append("title", file.name.replace(/\.[^.]+$/, ""));
-  formData.append("access_token", token);
-  const res = await fetch(`${BASE_URL}/${adAccountId}/advideos`, { method: "POST", body: formData });
-  const json = await res.json();
-  if (json.error) throw new Error(json.error.message);
-  const videoId: string = json.id;
-  for (let attempt = 0; attempt < 30; attempt++) {
-    await new Promise((r) => setTimeout(r, 4000));
-    const sr = await fetch(`${BASE_URL}/${videoId}?fields=status&access_token=${token}`);
-    const sj = await sr.json();
-    if (sj.status?.video_status === "ready") break;
-    if (sj.status?.video_status === "error") throw new Error("Video processing failed");
-  }
-  return { video_id: videoId };
-}
-
 async function createSingleCreative(
   adAccountId: string,
   token: string,
   pageId: string,
   copy: AdCopy,
-  media: { type: "image"; hash: string } | { type: "video"; video_id: string },
+  media: MediaRef,
   advantagePlus: boolean
 ): Promise<string> {
   let objectStorySpec: Record<string, unknown>;
@@ -114,10 +86,12 @@ async function createGroupCreative(
   token: string,
   pageId: string,
   copy: AdCopy,
-  hashes: string[],
-  videoIds: string[],
+  mediaRefs: MediaRef[],
   advantagePlus: boolean
 ): Promise<string> {
+  const hashes = mediaRefs.filter((m) => m.type === "image").map((m) => (m as { type: "image"; hash: string }).hash);
+  const videoIds = mediaRefs.filter((m) => m.type === "video").map((m) => (m as { type: "video"; video_id: string }).video_id);
+
   const assetFeedSpec: Record<string, unknown> = {
     bodies: [{ text: copy.primaryText || " " }],
     titles: [{ text: copy.headline }],
@@ -175,11 +149,7 @@ export async function POST(req: NextRequest) {
   const token = await getTokenForAccount(accountId);
   if (!token) return NextResponse.json({ error: "Token not found" }, { status: 401 });
 
-  const formData = await req.formData();
-  const configRaw = formData.get("config") as string;
-  if (!configRaw) return NextResponse.json({ error: "Missing config" }, { status: 400 });
-
-  const config = JSON.parse(configRaw) as {
+  const config = await req.json() as {
     adsetId: string;
     campaignId: string;
     campaignName: string;
@@ -191,31 +161,32 @@ export async function POST(req: NextRequest) {
     startTime?: string;
     advantagePlus: boolean;
     groups: number[][];
+    media: MediaRef[];
   };
 
-  const files = formData.getAll("files") as File[];
-  if (files.length === 0) return NextResponse.json({ error: "No files" }, { status: 400 });
+  if (!config.media || config.media.length === 0) {
+    return NextResponse.json({ error: "No media" }, { status: 400 });
+  }
 
   const adAccountId = account.ad_account_id;
   const results: { name: string; adId: string | null; error: string | null }[] = [];
 
   const groupedIndices = new Set(config.groups.flat());
 
-  // Build ordered list of ad items: singles first (in file order), then groups
   type AdItem =
-    | { type: "single"; fileIdx: number; copyIdx: number }
-    | { type: "group"; fileIndices: number[]; copyIdx: number };
+    | { type: "single"; mediaIdx: number; copyIdx: number }
+    | { type: "group"; mediaIndices: number[]; copyIdx: number };
 
   const adItems: AdItem[] = [];
   let copyIdx = 0;
 
-  for (let i = 0; i < files.length; i++) {
+  for (let i = 0; i < config.media.length; i++) {
     if (!groupedIndices.has(i)) {
-      adItems.push({ type: "single", fileIdx: i, copyIdx: copyIdx++ });
+      adItems.push({ type: "single", mediaIdx: i, copyIdx: copyIdx++ });
     }
   }
   for (const group of config.groups) {
-    adItems.push({ type: "group", fileIndices: group, copyIdx: copyIdx++ });
+    adItems.push({ type: "group", mediaIndices: group, copyIdx: copyIdx++ });
   }
 
   for (const item of adItems) {
@@ -223,21 +194,12 @@ export async function POST(req: NextRequest) {
     let adName: string;
 
     if (item.type === "single") {
-      const file = files[item.fileIdx];
-      const filename = file.name.replace(/\.[^.]+$/, "");
+      const mediaRef = config.media[item.mediaIdx];
+      const filename = mediaRef.filename.replace(/\.[^.]+$/, "");
       adName = resolvePattern(config.adNamePattern || "{filename}", filename, item.copyIdx, config.campaignName, config.adsetName);
 
       try {
-        const isVideo = file.type.startsWith("video/");
-        let media: { type: "image"; hash: string } | { type: "video"; video_id: string };
-        if (isVideo) {
-          const { video_id } = await uploadVideo(adAccountId, token, file);
-          media = { type: "video", video_id };
-        } else {
-          const { hash } = await uploadImage(adAccountId, token, file);
-          media = { type: "image", hash };
-        }
-        const creativeId = await createSingleCreative(adAccountId, token, config.pageId, copy, media, config.advantagePlus);
+        const creativeId = await createSingleCreative(adAccountId, token, config.pageId, copy, mediaRef, config.advantagePlus);
         const adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
 
         await db.insert(upload_history).values({
@@ -248,7 +210,7 @@ export async function POST(req: NextRequest) {
           adset_id: config.adsetId,
           adset_name: config.adsetName,
           ad_name: adName,
-          creative_type: isVideo ? "video" : "image",
+          creative_type: mediaRef.type === "video" ? "video" : "image",
           initial_status: config.status,
           result: "success",
         });
@@ -263,7 +225,7 @@ export async function POST(req: NextRequest) {
           adset_id: config.adsetId,
           adset_name: config.adsetName,
           ad_name: adName,
-          creative_type: files[item.fileIdx].type.startsWith("video/") ? "video" : "image",
+          creative_type: config.media[item.mediaIdx].type === "video" ? "video" : "image",
           initial_status: config.status,
           result: "error",
           error_message: message,
@@ -271,26 +233,12 @@ export async function POST(req: NextRequest) {
         results.push({ name: adName, adId: null, error: message });
       }
     } else {
-      // Group: multiple files → one asset_feed_spec creative
-      const groupFiles = item.fileIndices.map((i) => files[i]);
-      const firstName = groupFiles[0].name.replace(/\.[^.]+$/, "");
+      const groupRefs = item.mediaIndices.map((i) => config.media[i]);
+      const firstName = groupRefs[0].filename.replace(/\.[^.]+$/, "");
       adName = resolvePattern(config.adNamePattern || "{filename}", firstName, item.copyIdx, config.campaignName, config.adsetName);
 
       try {
-        const hashes: string[] = [];
-        const videoIds: string[] = [];
-
-        for (const file of groupFiles) {
-          if (file.type.startsWith("video/")) {
-            const { video_id } = await uploadVideo(adAccountId, token, file);
-            videoIds.push(video_id);
-          } else {
-            const { hash } = await uploadImage(adAccountId, token, file);
-            hashes.push(hash);
-          }
-        }
-
-        const creativeId = await createGroupCreative(adAccountId, token, config.pageId, copy, hashes, videoIds, config.advantagePlus);
+        const creativeId = await createGroupCreative(adAccountId, token, config.pageId, copy, groupRefs, config.advantagePlus);
         const adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
 
         await db.insert(upload_history).values({

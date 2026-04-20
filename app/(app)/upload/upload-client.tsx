@@ -102,6 +102,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
   // Upload state
   const [uploading, setUploading] = useState(false);
+  const [uploadStep, setUploadStep] = useState<string>("");
   const [results, setResults] = useState<{ name: string; adId: string | null; error: string | null }[]>([]);
 
   useEffect(() => {
@@ -291,26 +292,43 @@ export function UploadClient({ defaults }: UploadClientProps) {
     }
 
     setUploading(true);
+    setUploadStep("");
     setResults([]);
 
-    const formData = new FormData();
-    files.forEach((f) => formData.append("files", f));
-    formData.append("config", JSON.stringify({
-      adsetId: selectedAdsetId,
-      campaignId: selectedCampaignId,
-      campaignName: selectedCampaign?.name ?? "",
-      adsetName: selectedAdset?.name ?? "",
-      pageId,
-      status: (scheduleEnabled && scheduledDate) ? "ACTIVE" : (createPaused ? "PAUSED" : "ACTIVE"),
-      copies,
-      adNamePattern,
-      startTime,
-      advantagePlus,
-      groups,
-    }));
-
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      // Phase 1: upload each file individually to /api/upload/media
+      const media: { type: "image" | "video"; hash?: string; video_id?: string; filename: string }[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadStep(`Subiendo archivo ${i + 1} de ${files.length}: ${file.name}`);
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload/media", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(`${file.name}: ${data.error ?? "Error al subir"}`);
+        media.push(data);
+      }
+
+      // Phase 2: create ads with pre-uploaded media IDs
+      setUploadStep("Creando ads...");
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adsetId: selectedAdsetId,
+          campaignId: selectedCampaignId,
+          campaignName: selectedCampaign?.name ?? "",
+          adsetName: selectedAdset?.name ?? "",
+          pageId,
+          status: (scheduleEnabled && scheduledDate) ? "ACTIVE" : (createPaused ? "PAUSED" : "ACTIVE"),
+          copies,
+          adNamePattern,
+          startTime,
+          advantagePlus,
+          groups,
+          media,
+        }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al crear ads");
       setResults(data.results);
@@ -321,6 +339,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
       toast.error(String(e));
     } finally {
       setUploading(false);
+      setUploadStep("");
     }
   }
 
@@ -766,7 +785,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
         disabled={uploading || adItems.length === 0 || !selectedAdsetId || !pageId}
         className="w-full bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-sm py-3 rounded-md transition-colors"
       >
-        {uploading ? "Creando ads..." : `Crear ${adItems.length > 0 ? adItems.length : ""} ads`}
+        {uploading ? (uploadStep || "Creando ads...") : `Crear ${adItems.length > 0 ? adItems.length : ""} ads`}
       </button>
     </div>
   );
