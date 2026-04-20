@@ -487,25 +487,46 @@ export function UploadClient({ defaults }: UploadClientProps) {
             {selectedCampaignId && (
               <>
                 <button onClick={openCreateAdset} className="flex items-center gap-1.5 text-xs font-mono text-[#555] hover:text-[#3b82f6] transition-colors">
-                  <Plus className="w-3 h-3" /> Nuevo Ad Set (duplicar)
+                  <Plus className="w-3 h-3" /> Nuevo Ad Set
                 </button>
                 {showCreateAdset && (
                   <div className="border border-[#2a2a2a] rounded-md p-3 space-y-2 bg-[#141414]">
-                    <div className="space-y-1">
-                      <p className="text-xs font-mono text-[#555]">Plantilla (copia targeting y presupuesto)</p>
-                      <select value={newAdsetSourceId} onChange={(e) => setNewAdsetSourceId(e.target.value)} className={selectClass} disabled={loadingSourceAdsets}>
-                        <option value="">{loadingSourceAdsets ? "Cargando..." : "Seleccioná plantilla..."}</option>
-                        {sourceAdsets.map((a) => <option key={a.id} value={a.id}>{a.campaignName} → {a.name}</option>)}
-                      </select>
-                    </div>
-                    <input type="text" placeholder="Nombre del nuevo Ad Set" value={newAdsetName} onChange={(e) => setNewAdsetName(e.target.value)} className={inputClass} />
-                    <div className="flex gap-2">
-                      <button onClick={handleCreateAdset} disabled={creatingAdset}
-                        className="flex-1 bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-xs py-1.5 rounded transition-colors">
-                        {creatingAdset ? "Creando..." : "Crear"}
-                      </button>
-                      <button onClick={() => setShowCreateAdset(false)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] px-3 transition-colors">Cancelar</button>
-                    </div>
+                    {loadingSourceAdsets ? (
+                      <p className="text-xs font-mono text-[#555]">Cargando Ad Sets...</p>
+                    ) : sourceAdsets.length === 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-xs font-mono text-[#aaa]">No hay Ad Sets en la cuenta. Creá uno en Ads Manager primero.</p>
+                        <a
+                          href="https://adsmanager.facebook.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa]"
+                        >
+                          → Abrir Ads Manager
+                        </a>
+                        <div className="pt-1">
+                          <button onClick={() => setShowCreateAdset(false)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] transition-colors">Cerrar</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-xs font-mono text-[#555]">Copiar configuración de:</p>
+                          <select value={newAdsetSourceId} onChange={(e) => setNewAdsetSourceId(e.target.value)} className={selectClass}>
+                            <option value="">Seleccioná Ad Set base...</option>
+                            {sourceAdsets.map((a) => <option key={a.id} value={a.id}>{a.campaignName} → {a.name}</option>)}
+                          </select>
+                        </div>
+                        <input type="text" placeholder="Nombre del nuevo Ad Set" value={newAdsetName} onChange={(e) => setNewAdsetName(e.target.value)} className={inputClass} />
+                        <div className="flex gap-2">
+                          <button onClick={handleCreateAdset} disabled={creatingAdset}
+                            className="flex-1 bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-xs py-1.5 rounded transition-colors">
+                            {creatingAdset ? "Creando..." : "Crear"}
+                          </button>
+                          <button onClick={() => setShowCreateAdset(false)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] px-3 transition-colors">Cancelar</button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </>
