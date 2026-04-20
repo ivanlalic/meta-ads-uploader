@@ -18,6 +18,7 @@ type Page = { id: string; name: string };
 type AdCopy = {
   headline: string;
   primaryText: string;
+  linkDescription: string;
   url: string;
   cta: string;
 };
@@ -48,6 +49,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
   const [commonCopy, setCommonCopy] = useState<AdCopy>({
     headline: "",
     primaryText: "",
+    linkDescription: "",
     url: "",
     cta: "SHOP_NOW",
   });
@@ -398,6 +400,16 @@ export function UploadClient({ defaults }: UploadClientProps) {
               />
             </div>
             <div className="space-y-1">
+              <label className={labelClass}>Link Description</label>
+              <input
+                type="text"
+                value={commonCopy.linkDescription}
+                onChange={(e) => setCommonCopy((p) => ({ ...p, linkDescription: e.target.value }))}
+                placeholder="Descripción del enlace (opcional)"
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-1">
               <label className={labelClass}>CTA</label>
               <select value={commonCopy.cta} onChange={(e) => setCommonCopy((p) => ({ ...p, cta: e.target.value }))} className={selectClass}>
                 {CTA_OPTIONS.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
@@ -425,6 +437,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
                       <th className="text-left px-3 py-2 text-[#555] w-12">Ad</th>
                       <th className="text-left px-3 py-2 text-[#555]">Headline</th>
                       <th className="text-left px-3 py-2 text-[#555]">Primary Text</th>
+                      <th className="text-left px-3 py-2 text-[#555]">Descripción</th>
                       <th className="text-left px-3 py-2 text-[#555]">URL</th>
                       <th className="text-left px-3 py-2 text-[#555] w-32">CTA</th>
                     </tr>
@@ -457,6 +470,15 @@ export function UploadClient({ defaults }: UploadClientProps) {
                             placeholder="Texto..."
                             rows={2}
                             className="w-full bg-transparent border border-[#2a2a2a] rounded px-2 py-1 text-[#f5f5f5] placeholder:text-[#333] focus:outline-none focus:border-[#3b82f6] resize-none"
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input
+                            type="text"
+                            value={perAdCopy[i]?.linkDescription ?? ""}
+                            onChange={(e) => updatePerAdCopy(i, "linkDescription", e.target.value)}
+                            placeholder="Descripción..."
+                            className="w-full bg-transparent border border-[#2a2a2a] rounded px-2 py-1 text-[#f5f5f5] placeholder:text-[#333] focus:outline-none focus:border-[#3b82f6]"
                           />
                         </td>
                         <td className="px-2 py-2">

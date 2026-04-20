@@ -9,6 +9,7 @@ const BASE_URL = "https://graph.facebook.com/v21.0";
 type AdCopy = {
   headline: string;
   primaryText: string;
+  linkDescription: string;
   url: string;
   cta: string;
 };
@@ -86,6 +87,7 @@ async function createAdCreative(
         link: copy.url,
         message: copy.primaryText,
         name: copy.headline,
+        description: copy.linkDescription || undefined,
         call_to_action: { type: copy.cta },
       },
     };
@@ -96,6 +98,7 @@ async function createAdCreative(
         video_id: media.video_id,
         title: copy.headline,
         message: copy.primaryText,
+        link_description: copy.linkDescription || undefined,
         call_to_action: {
           type: copy.cta,
           value: { link: copy.url },
