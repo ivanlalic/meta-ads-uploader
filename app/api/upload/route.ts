@@ -97,61 +97,42 @@ async function createPlacementCreative(
   const feedMedia = mediaRefs[feedMember.fileIdx];
   const storiesMedia = storiesMember ? mediaRefs[storiesMember.fileIdx] : null;
 
-  const images: Record<string, unknown>[] = [];
-  const videos: Record<string, unknown>[] = [];
-
+  let objectStorySpec: Record<string, unknown>;
   if (feedMedia.type === "image") {
-    images.push({ hash: feedMedia.hash, adlabels: [{ name: "label_feed" }] });
+    objectStorySpec = {
+      page_id: pageId,
+      link_data: {
+        image_hash: feedMedia.hash,
+        link: copy.url,
+        message: copy.primaryText,
+        name: copy.headline,
+        description: copy.linkDescription || undefined,
+        call_to_action: { type: copy.cta },
+      },
+    };
   } else {
-    videos.push({ video_id: feedMedia.video_id, adlabels: [{ name: "label_feed" }] });
-  }
-  if (storiesMedia) {
-    if (storiesMedia.type === "image") {
-      images.push({ hash: storiesMedia.hash, adlabels: [{ name: "label_stories" }] });
-    } else {
-      videos.push({ video_id: storiesMedia.video_id, adlabels: [{ name: "label_stories" }] });
-    }
-  }
-
-  const assetFeedSpec: Record<string, unknown> = {
-    bodies: [{ text: copy.primaryText || " " }],
-    titles: [{ text: copy.headline }],
-    link_urls: [{ website_url: copy.url }],
-    call_to_action_types: [copy.cta],
-  };
-  if (copy.linkDescription) assetFeedSpec.descriptions = [{ text: copy.linkDescription }];
-  if (images.length > 0) assetFeedSpec.images = images;
-  if (videos.length > 0) assetFeedSpec.videos = videos;
-
-  if (storiesMedia) {
-    const feedLabel = feedMedia.type === "image" ? { image_label: { name: "label_feed" } } : { video_label: { name: "label_feed" } };
-    const storiesLabel = storiesMedia.type === "image" ? { image_label: { name: "label_stories" } } : { video_label: { name: "label_stories" } };
-    assetFeedSpec.asset_customization_rules = [
-      {
-        customization_spec: {
-          publisher_platforms: ["facebook", "instagram", "audience_network", "messenger"],
-          facebook_positions: ["feed", "right_hand_column", "marketplace", "video_feeds", "search", "instant_article"],
-          instagram_positions: ["stream", "explore", "explore_home"],
-          audience_network_positions: ["classic", "rewarded_video"],
-          messenger_positions: ["messenger_home"],
-        },
-        ...feedLabel,
+    objectStorySpec = {
+      page_id: pageId,
+      video_data: {
+        video_id: feedMedia.video_id,
+        title: copy.headline,
+        message: copy.primaryText,
+        link_description: copy.linkDescription || undefined,
+        call_to_action: { type: copy.cta, value: { link: copy.url } },
       },
-      {
-        customization_spec: {
-          publisher_platforms: ["facebook", "instagram"],
-          facebook_positions: ["story"],
-          instagram_positions: ["story", "reels"],
-        },
-        ...storiesLabel,
-      },
-    ];
+    };
   }
 
   const body = new URLSearchParams();
-  body.set("asset_feed_spec", JSON.stringify(assetFeedSpec));
-  body.set("object_type", "SHARE");
-  body.set("page_id", pageId);
+  body.set("object_story_spec", JSON.stringify(objectStorySpec));
+
+  if (storiesMedia) {
+    const instagramOverride: Record<string, string> = storiesMedia.type === "image"
+      ? { image_hash: storiesMedia.hash }
+      : { video_id: storiesMedia.video_id };
+    body.set("platform_customizations", JSON.stringify({ instagram: instagramOverride }));
+  }
+
   if (advantagePlus) {
     body.set("degrees_of_freedom_spec", JSON.stringify({
       creative_features_spec: { standard_enhancements: { enroll_status: "OPT_IN" } },
