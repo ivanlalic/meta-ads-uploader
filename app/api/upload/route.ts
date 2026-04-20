@@ -200,7 +200,12 @@ export async function POST(req: NextRequest) {
       adName = resolvePattern(config.adNamePattern || "{filename}", filename, item.copyIdx, config.campaignName, config.adsetName);
 
       try {
-        const creativeId = await createSingleCreative(adAccountId, token, config.pageId, copy, mediaRef, config.advantagePlus);
+        let creativeId: string;
+        try {
+          creativeId = await createSingleCreative(adAccountId, token, config.pageId, copy, mediaRef, config.advantagePlus);
+        } catch (e) {
+          throw new Error(`creative: ${e instanceof Error ? e.message : String(e)} | page_id=${config.pageId} | adaccount=${adAccountId}`);
+        }
         const adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
 
         await db.insert(upload_history).values({
