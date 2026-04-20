@@ -77,7 +77,7 @@ async function createSingleCreative(
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/adcreatives`, { method: "POST", body });
   const json = await res.json();
-  if (json.error) throw new Error(json.error.message);
+  if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}${json.error.error_subcode ? ` (${json.error.error_subcode})` : ""}`);
   return json.id as string;
 }
 
@@ -105,6 +105,7 @@ async function createGroupCreative(
   const body = new URLSearchParams();
   body.set("asset_feed_spec", JSON.stringify(assetFeedSpec));
   body.set("object_type", "SHARE");
+  body.set("page_id", pageId);
   if (advantagePlus) {
     body.set("degrees_of_freedom_spec", JSON.stringify({
       creative_features_spec: { standard_enhancements: { enroll_status: "OPT_IN" } },
@@ -113,7 +114,7 @@ async function createGroupCreative(
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/adcreatives`, { method: "POST", body });
   const json = await res.json();
-  if (json.error) throw new Error(json.error.message);
+  if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}${json.error.error_subcode ? ` (${json.error.error_subcode})` : ""}`);
   return json.id as string;
 }
 
@@ -135,7 +136,7 @@ async function createAd(
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/ads`, { method: "POST", body });
   const json = await res.json();
-  if (json.error) throw new Error(json.error.message);
+  if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}${json.error.error_subcode ? ` (${json.error.error_subcode})` : ""}`);
   return json.id as string;
 }
 

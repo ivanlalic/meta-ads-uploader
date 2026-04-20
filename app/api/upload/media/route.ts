@@ -12,7 +12,7 @@ async function uploadImage(adAccountId: string, token: string, file: File): Prom
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/adimages`, { method: "POST", body });
   const json = await res.json();
-  if (json.error) throw new Error(json.error.message);
+  if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}`);
   const images = json.images as Record<string, { hash: string }>;
   return Object.values(images)[0];
 }
@@ -24,7 +24,7 @@ async function uploadVideo(adAccountId: string, token: string, file: File): Prom
   formData.append("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/advideos`, { method: "POST", body: formData });
   const json = await res.json();
-  if (json.error) throw new Error(json.error.message);
+  if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}`);
   const videoId: string = json.id;
   for (let attempt = 0; attempt < 30; attempt++) {
     await new Promise((r) => setTimeout(r, 4000));
