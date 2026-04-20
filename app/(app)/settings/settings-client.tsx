@@ -8,19 +8,6 @@ import type { Account, AccountDefaults } from "@/lib/db/schema";
 type Page = { id: string; name: string; instagram_business_account?: { id: string } };
 type Pixel = { id: string; name: string };
 
-const CTA_OPTIONS = [
-  { value: "SHOP_NOW", label: "Shop Now" },
-  { value: "LEARN_MORE", label: "Learn More" },
-  { value: "SIGN_UP", label: "Sign Up" },
-  { value: "SUBSCRIBE", label: "Subscribe" },
-  { value: "CONTACT_US", label: "Contact Us" },
-  { value: "BOOK_NOW", label: "Book Now" },
-  { value: "DOWNLOAD", label: "Download" },
-  { value: "GET_OFFER", label: "Get Offer" },
-  { value: "GET_QUOTE", label: "Get Quote" },
-  { value: "WATCH_MORE", label: "Watch More" },
-];
-
 interface SettingsClientProps {
   account: Account;
   defaults: AccountDefaults | null;
@@ -35,9 +22,6 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
 
   const [selectedPageId, setSelectedPageId] = useState(defaults?.facebook_page_id ?? "");
   const [selectedPixelId, setSelectedPixelId] = useState(defaults?.pixel_id ?? "");
-  const [defaultUrl, setDefaultUrl] = useState(defaults?.default_url ?? "");
-  const [defaultDescription, setDefaultDescription] = useState(defaults?.default_description ?? "");
-  const [defaultCta, setDefaultCta] = useState(defaults?.default_cta ?? "SHOP_NOW");
 
   useEffect(() => {
     fetch("/api/meta/pages")
@@ -65,9 +49,6 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
         instagram_account_id: selectedPage?.instagram_business_account?.id ?? null,
         pixel_id: selectedPixelId || null,
         pixel_name: selectedPixel?.name ?? null,
-        default_url: defaultUrl || null,
-        default_description: defaultDescription || null,
-        default_cta: defaultCta,
       });
       toast.success("Configuración guardada");
     } catch {
@@ -138,55 +119,6 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
               ))}
             </select>
           )}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">
-          Defaults de Publicación
-        </h2>
-
-        <div className="space-y-1">
-          <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
-            URL destino
-          </label>
-          <input
-            type="url"
-            value={defaultUrl}
-            onChange={(e) => setDefaultUrl(e.target.value)}
-            placeholder="https://tutienda.com/producto"
-            className="w-full bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] placeholder:text-[#333] focus:outline-none focus:border-[#3b82f6]"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
-            Descripción default
-          </label>
-          <textarea
-            value={defaultDescription}
-            onChange={(e) => setDefaultDescription(e.target.value)}
-            placeholder="Texto del anuncio..."
-            rows={3}
-            className="w-full bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] placeholder:text-[#333] focus:outline-none focus:border-[#3b82f6] resize-none"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
-            CTA default
-          </label>
-          <select
-            value={defaultCta}
-            onChange={(e) => setDefaultCta(e.target.value)}
-            className="w-full bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] focus:outline-none focus:border-[#3b82f6]"
-          >
-            {CTA_OPTIONS.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
         </div>
       </section>
 

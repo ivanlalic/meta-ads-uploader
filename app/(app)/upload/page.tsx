@@ -1,8 +1,12 @@
-export default function UploadPage() {
-  return (
-    <div className="max-w-3xl">
-      <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Upload</h1>
-      <p className="text-[#555] text-sm font-mono mt-1">Próximamente — Fase 4.</p>
-    </div>
-  );
+import { redirect } from "next/navigation";
+import { getActiveAccountId, getAccountDefaults } from "@/app/actions/accounts";
+import { UploadClient } from "./upload-client";
+
+export default async function UploadPage() {
+  const accountId = await getActiveAccountId();
+  if (!accountId) redirect("/connect");
+
+  const defaults = await getAccountDefaults(accountId);
+
+  return <UploadClient defaults={defaults} />;
 }
