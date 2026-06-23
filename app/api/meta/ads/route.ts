@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getActiveAccountId, getAccountById } from "@/app/actions/accounts";
 import { metaGet } from "@/lib/meta/client";
 
@@ -12,12 +12,27 @@ type Ad = {
   campaign: { id: string; name: string };
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const adsetId = req.nextUrl.searchParams.get("adsetId");
+
   const accountId = await getActiveAccountId();
   if (!accountId) return NextResponse.json({ error: "No active account" }, { status: 401 });
 
   const account = await getAccountById(accountId);
   if (!account) return NextResponse.json({ error: "Account not found" }, { status: 404 });
+
+  if (adsetId) {
+    const result = await metaGet<{ data: Ad[] }>(
+      accountId,
+      `/${adsetId}/ads`,
+      {
+        fields: "id,name,status,effective_status,created_time,adset{id,name},campaign{id,name}",
+        limit: "200",
+      }
+    );
+    if (!result.ok) return NextResponse.json({ error: result.error.message }, { status: 400 });
+    return NextResponse.json(result.data);
+  }
 
   const result = await metaGet<{ data: Ad[] }>(
     accountId,

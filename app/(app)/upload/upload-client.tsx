@@ -105,6 +105,12 @@ export function UploadClient({ defaults }: UploadClientProps) {
   const [uploadStep, setUploadStep] = useState<string>("");
   const [results, setResults] = useState<{ name: string; adId: string | null; error: string | null }[]>([]);
 
+  // Source ad (copy from existing)
+  const [sourceAds, setSourceAds] = useState<{ id: string; name: string; effective_status: string }[]>([]);
+  const [loadingSourceAds, setLoadingSourceAds] = useState(false);
+  const [selectedSourceAdId, setSelectedSourceAdId] = useState("");
+  const [loadingAdDetails, setLoadingAdDetails] = useState(false);
+
   useEffect(() => {
     fetch("/api/meta/campaigns")
       .then((r) => r.json())
@@ -113,7 +119,13 @@ export function UploadClient({ defaults }: UploadClientProps) {
       .finally(() => setLoadingCampaigns(false));
     fetch("/api/meta/pages")
       .then((r) => r.json())
-      .then((d) => setPages(d.data ?? []));
+      .then((d) => {
+        const list = d.data ?? [];
+        setPages(list);
+        if (!pageId && list.length === 1) {
+          setPageId(list[0].id);
+        }
+      });
   }, []);
 
   useEffect(() => {
@@ -127,6 +139,17 @@ export function UploadClient({ defaults }: UploadClientProps) {
       .catch(() => toast.error("Error cargando conjuntos"))
       .finally(() => setLoadingAdsets(false));
   }, [selectedCampaignId]);
+
+  useEffect(() => {
+    if (!selectedAdsetId) { setSourceAds([]); return; }
+    setLoadingSourceAds(true);
+    setSelectedSourceAdId("");
+    fetch(`/api/meta/ads?adsetId=${selectedAdsetId}`)
+      .then((r) => r.json())
+      .then((d) => setSourceAds(d.data ?? []))
+      .catch(() => toast.error("Error cargando anuncios"))
+      .finally(() => setLoadingSourceAds(false));
+  }, [selectedAdsetId]);
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const arr = Array.from(incoming);
@@ -198,6 +221,34 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
   function applyCommonToAll() {
     setPerAdCopy(files.map(() => ({ ...commonCopy })));
+  }
+
+  async function loadAdDetails(adId: string) {
+    if (!adId) return;
+    setLoadingAdDetails(true);
+    try {
+      const res = await fetch(`/api/meta/ad-details?adId=${adId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      if (data.copy) {
+        const loaded = {
+          headline: data.copy.headline ?? "",
+          primaryText: data.copy.primaryText ?? "",
+          linkDescription: data.copy.linkDescription ?? "",
+          url: data.copy.url ?? "",
+          cta: data.copy.cta ?? "SHOP_NOW",
+        };
+        setCommonCopy(loaded);
+        setPerAdCopy(files.map(() => ({ ...loaded })));
+        toast.success("Copy cargado desde el anuncio");
+      } else {
+        toast.error("No se pudo extraer el copy del anuncio (probablemente es multi-ratio)");
+      }
+    } catch (e) {
+      toast.error(String(e));
+    } finally {
+      setLoadingAdDetails(false);
+    }
   }
 
   async function handleCreateCampaign() {
@@ -375,7 +426,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
         {files.length > 0 && (
           <>
-            {selectedFileIndices.size >= 2 && (
+            {false && selectedFileIndices.size >= 2 && (
               <button onClick={groupSelected} className="flex items-center gap-2 text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa] transition-colors">
                 <Layers className="w-3.5 h-3.5" />
                 Agrupar {selectedFileIndices.size} archivos como un ad (multi-ratio)
@@ -413,9 +464,9 @@ export function UploadClient({ defaults }: UploadClientProps) {
                         {isInGroup && <span className="text-[#3b82f6] ml-2">Grupo {groupIdx + 1}</span>}
                       </p>
                     </div>
-                    {isInGroup && member && (
+                    {false && (
                       <select
-                        value={member.placement}
+                        value={member?.placement ?? "feed"}
                         onChange={(e) => setPlacement(groupIdx, i, e.target.value as "feed" | "stories")}
                         className="text-xs font-mono bg-[#1c1c1c] border border-[#2a2a2a] rounded px-2 py-1 text-[#aaa] focus:outline-none focus:border-[#3b82f6] mr-2"
                       >
@@ -423,7 +474,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
                         <option value="stories">Stories / 9:16</option>
                       </select>
                     )}
-                    {isInGroup && (
+                    {false && (
                       <button onClick={() => ungroup(groupIdx)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] transition-colors mr-2">
                         desagrupar
                       </button>
@@ -436,7 +487,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
               })}
             </div>
 
-            {groups.length > 0 && (
+            {false && groups.length > 0 && (
               <p className="text-xs font-mono text-[#555]">
                 {groups.length} grupo{groups.length > 1 ? "s" : ""} multi-ratio · {adItems.length} ads en total
               </p>
@@ -474,24 +525,27 @@ export function UploadClient({ defaults }: UploadClientProps) {
               </div>
             )}
 
-            {/* Create campaign */}
-            <button onClick={() => setShowCreateCampaign((v) => !v)} className="flex items-center gap-1.5 text-xs font-mono text-[#555] hover:text-[#3b82f6] transition-colors">
-              <Plus className="w-3 h-3" /> Nueva campaña
-            </button>
-            {showCreateCampaign && (
-              <div className="border border-[#2a2a2a] rounded-md p-3 space-y-2 bg-[#141414]">
-                <input type="text" placeholder="Nombre de la campaña" value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} className={inputClass} />
-                <select value={newCampaignObjective} onChange={(e) => setNewCampaignObjective(e.target.value)} className={selectClass}>
-                  {CAMPAIGN_OBJECTIVES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-                <div className="flex gap-2">
-                  <button onClick={handleCreateCampaign} disabled={creatingCampaign}
-                    className="flex-1 bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-xs py-1.5 rounded transition-colors">
-                    {creatingCampaign ? "Creando..." : "Crear"}
-                  </button>
-                  <button onClick={() => setShowCreateCampaign(false)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] px-3 transition-colors">Cancelar</button>
-                </div>
-              </div>
+            {false && (
+              <>
+                <button onClick={() => setShowCreateCampaign((v) => !v)} className="flex items-center gap-1.5 text-xs font-mono text-[#555] hover:text-[#3b82f6] transition-colors">
+                  <Plus className="w-3 h-3" /> Nueva campaña
+                </button>
+                {showCreateCampaign && (
+                  <div className="border border-[#2a2a2a] rounded-md p-3 space-y-2 bg-[#141414]">
+                    <input type="text" placeholder="Nombre de la campaña" value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} className={inputClass} />
+                    <select value={newCampaignObjective} onChange={(e) => setNewCampaignObjective(e.target.value)} className={selectClass}>
+                      {CAMPAIGN_OBJECTIVES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <div className="flex gap-2">
+                      <button onClick={handleCreateCampaign} disabled={creatingCampaign}
+                        className="flex-1 bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-xs py-1.5 rounded transition-colors">
+                        {creatingCampaign ? "Creando..." : "Crear"}
+                      </button>
+                      <button onClick={() => setShowCreateCampaign(false)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] px-3 transition-colors">Cancelar</button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -517,8 +571,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
               </div>
             )}
 
-            {/* Create adset (duplicate) */}
-            {selectedCampaignId && (
+            {false && (
               <>
                 <button onClick={openCreateAdset} className="flex items-center gap-1.5 text-xs font-mono text-[#555] hover:text-[#3b82f6] transition-colors">
                   <Plus className="w-3 h-3" /> Nuevo Ad Set
@@ -568,6 +621,41 @@ export function UploadClient({ defaults }: UploadClientProps) {
           </div>
         </div>
       </section>
+
+      {/* Section 2.5: Anuncio fuente (opcional) */}
+      {selectedAdsetId && (
+        <section className="space-y-3">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Anuncio fuente</h2>
+          <p className="text-xs font-mono text-[#555]">Seleccioná un anuncio existente para copiar su copy en los nuevos ads</p>
+          <div className="space-y-2">
+            {loadingSourceAds ? (
+              <p className="text-xs font-mono text-[#555]">Cargando anuncios...</p>
+            ) : sourceAds.length === 0 ? (
+              <p className="text-xs font-mono text-[#333]">No hay anuncios en este Ad Set</p>
+            ) : (
+              <div className="flex gap-2">
+                <select
+                  value={selectedSourceAdId}
+                  onChange={(e) => setSelectedSourceAdId(e.target.value)}
+                  className={selectClass}
+                >
+                  <option value="">Seleccionar anuncio...</option>
+                  {sourceAds.map((ad) => (
+                    <option key={ad.id} value={ad.id}>{ad.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => loadAdDetails(selectedSourceAdId)}
+                  disabled={!selectedSourceAdId || loadingAdDetails}
+                  className="shrink-0 bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-xs px-4 py-2 rounded-md transition-colors"
+                >
+                  {loadingAdDetails ? "Cargando..." : "Cargar datos"}
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Section 3: Copy */}
       <section className="space-y-4">
