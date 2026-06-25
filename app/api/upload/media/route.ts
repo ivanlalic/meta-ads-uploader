@@ -17,7 +17,7 @@ async function uploadImage(adAccountId: string, token: string, file: File): Prom
   return Object.values(images)[0];
 }
 
-async function uploadVideo(adAccountId: string, token: string, file: File): Promise<{ video_id: string }> {
+async function uploadVideo(adAccountId: string, token: string, file: File): Promise<{ video_id: string; image_hash?: string }> {
   const formData = new FormData();
   formData.append("source", file);
   formData.append("title", file.name.replace(/\.[^.]+$/, ""));
@@ -33,7 +33,31 @@ async function uploadVideo(adAccountId: string, token: string, file: File): Prom
     if (sj.status?.video_status === "ready") break;
     if (sj.status?.video_status === "error") throw new Error("Video processing failed");
   }
-  return { video_id: videoId };
+
+  // Fetch auto-generated thumbnail and upload as ad image
+  let image_hash: string | undefined;
+  try {
+    const thumbRes = await fetch(`${BASE_URL}/${videoId}/thumbnails?fields=uri&access_token=${token}`);
+    const thumbJson = await thumbRes.json();
+    const thumbnails = thumbJson.data as { uri: string }[] | undefined;
+    if (thumbnails && thumbnails.length > 0) {
+      const dl = await fetch(thumbnails[0].uri);
+      const b64 = Buffer.from(await dl.arrayBuffer()).toString("base64");
+      const imgBody = new URLSearchParams();
+      imgBody.set("bytes", b64);
+      imgBody.set("access_token", token);
+      const imgRes = await fetch(`${BASE_URL}/${adAccountId}/adimages`, { method: "POST", body: imgBody });
+      const imgJson = await imgRes.json();
+      if (!imgJson.error) {
+        const images = imgJson.images as Record<string, { hash: string }>;
+        image_hash = Object.values(images)[0].hash;
+      }
+    }
+  } catch {
+    // thumbnail fetch/upload failed — proceed without it
+  }
+
+  return { video_id: videoId, image_hash };
 }
 
 export async function POST(req: NextRequest) {
@@ -55,8 +79,8 @@ export async function POST(req: NextRequest) {
 
   try {
     if (isVideo) {
-      const { video_id } = await uploadVideo(adAccountId, token, file);
-      return NextResponse.json({ type: "video", video_id, filename: file.name });
+      const { video_id, image_hash } = await uploadVideo(adAccountId, token, file);
+      return NextResponse.json({ type: "video", video_id, image_hash, filename: file.name });
     } else {
       const { hash } = await uploadImage(adAccountId, token, file);
       return NextResponse.json({ type: "image", hash, filename: file.name });

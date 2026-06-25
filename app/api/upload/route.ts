@@ -16,7 +16,7 @@ type AdCopy = {
 
 type MediaRef =
   | { type: "image"; hash: string; filename: string }
-  | { type: "video"; video_id: string; filename: string };
+  | { type: "video"; video_id: string; image_hash?: string; filename: string };
 
 function resolvePattern(
   pattern: string,
@@ -58,6 +58,7 @@ async function createSingleCreative(
       page_id: pageId,
       video_data: {
         video_id: media.video_id,
+        image_hash: media.image_hash,
         title: copy.headline,
         message: copy.primaryText,
         link_description: copy.linkDescription || undefined,
