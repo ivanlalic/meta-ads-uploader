@@ -100,9 +100,6 @@ export function UploadClient({ defaults }: UploadClientProps) {
   // Advantage+
   const [advantagePlus, setAdvantagePlus] = useState(false);
 
-  // Image crop
-  const [originalCrop, setOriginalCrop] = useState(true);
-
   // Upload state
   const [uploading, setUploading] = useState(false);
   const [uploadStep, setUploadStep] = useState<string>("");
@@ -438,7 +435,6 @@ export function UploadClient({ defaults }: UploadClientProps) {
           adNamePattern,
           startTime,
           advantagePlus,
-          originalCrop,
           groups,
           media,
         }),
@@ -909,13 +905,6 @@ export function UploadClient({ defaults }: UploadClientProps) {
           <div>
             <p className="text-sm font-mono text-[#f5f5f5]">Creative Enhancements (Meta Defaults)</p>
             <p className="text-xs font-mono text-[#555]">Meta aplica automáticamente mejoras básicas al creativo</p>
-          </div>
-        </label>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" checked={originalCrop} onChange={(e) => setOriginalCrop(e.target.checked)} className="accent-[#3b82f6]" />
-          <div>
-            <p className="text-sm font-mono text-[#f5f5f5]">Imagen original sin recorte</p>
-            <p className="text-xs font-mono text-[#555]">Usar la imagen tal cual en todos los placements (sin recorte automático)</p>
           </div>
         </label>
       </section>
