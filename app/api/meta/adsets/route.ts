@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveAccountId, getAccountById } from "@/app/actions/accounts";
 import { metaGet, getTokenForAccount } from "@/lib/meta/client";
 
-const BASE_URL = "https://graph.facebook.com/v21.0";
+const BASE_URL = "https://graph.facebook.com/v25.0";
 
 type AdSet = {
   id: string;

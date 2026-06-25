@@ -13,7 +13,7 @@ export async function GET() {
   if (!accountId) return NextResponse.json({ error: "No active account" }, { status: 401 });
 
   const result = await metaGet<{ data: Page[] }>(accountId, "/me/accounts", {
-    fields: "id,name,instagram_business_account",
+    fields: "id,name,category,instagram_business_account",
   });
 
   if (!result.ok) return NextResponse.json({ error: result.error.message }, { status: 400 });

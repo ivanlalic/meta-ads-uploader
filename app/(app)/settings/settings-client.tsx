@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { upsertAccountDefaults } from "@/app/actions/accounts";
 import type { Account, AccountDefaults } from "@/lib/db/schema";
 
-type Page = { id: string; name: string; instagram_business_account?: { id: string } };
+type Page = { id: string; name: string; category?: string; instagram_business_account?: { id: string } };
 type Pixel = { id: string; name: string };
 
 interface SettingsClientProps {
@@ -87,7 +87,7 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
               <option value="">Sin página</option>
               {pages.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name}
+                  {p.name} ({p.id}){p.category ? ` · ${p.category}` : ""}
                 </option>
               ))}
             </select>

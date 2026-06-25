@@ -110,6 +110,10 @@ export function UploadClient({ defaults }: UploadClientProps) {
   const [loadingSourceAds, setLoadingSourceAds] = useState(false);
   const [selectedSourceAdId, setSelectedSourceAdId] = useState("");
   const [loadingAdDetails, setLoadingAdDetails] = useState(false);
+  const [sourceCopies, setSourceCopies] = useState<{ headline: string; primaryText: string; linkDescription: string }[]>([]);
+
+  // Pre-upload media
+  const [mediaUploads, setMediaUploads] = useState<{ fileIdx: number; status: "pending" | "uploading" | "done" | "error"; type?: string; hash?: string; video_id?: string; filename?: string; error?: string }[]>([]);
 
   useEffect(() => {
     fetch("/api/meta/campaigns")
@@ -151,6 +155,30 @@ export function UploadClient({ defaults }: UploadClientProps) {
       .finally(() => setLoadingSourceAds(false));
   }, [selectedAdsetId]);
 
+  // Upload all files to Meta
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  async function uploadAllFiles() {
+    if (files.length === 0) return;
+    setUploadingMedia(true);
+    // Re-initialize upload state for all files
+    const init = files.map((f, i) => ({ fileIdx: i, status: "uploading" as const, filename: f.name }));
+    setMediaUploads(init);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload/media", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Error al subir");
+        setMediaUploads((prev) => prev.map((m) => m.fileIdx === i ? { ...m, ...data, status: "done" } : m));
+      } catch (e) {
+        setMediaUploads((prev) => prev.map((m) => m.fileIdx === i ? { ...m, status: "error", error: String(e) } : m));
+      }
+    }
+    setUploadingMedia(false);
+  }
+
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const arr = Array.from(incoming);
     setFiles((prev) => {
@@ -175,6 +203,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
     setPerAdCopy((prev) => prev.filter((_, i) => i !== index));
     setPreviews((prev) => { const next = { ...prev }; delete next[index]; return next; });
     setSelectedFileIndices((prev) => { const next = new Set(prev); next.delete(index); return next; });
+    setMediaUploads([]);
     setGroups((prev) => prev.map((g) => g.filter((m) => m.fileIdx !== index).map((m) => ({ ...m, fileIdx: m.fileIdx > index ? m.fileIdx - 1 : m.fileIdx }))).filter((g) => g.length > 1));
   }
 
@@ -215,6 +244,22 @@ export function UploadClient({ defaults }: UploadClientProps) {
   }
   groups.forEach((g, gi) => adItems.push({ type: "group", groupIdx: gi, members: g }));
 
+  function updateSourceCopy(index: number, field: string, value: string) {
+    setSourceCopies((prev) => prev.map((c, i) => i === index ? { ...c, [field]: value } : c));
+  }
+
+  function removeSourceCopy(index: number) {
+    setSourceCopies((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function applySourceCopyToCommon(index: number) {
+    const c = sourceCopies[index];
+    if (!c) return;
+    setCommonCopy((prev) => ({ ...prev, headline: c.headline, primaryText: c.primaryText, linkDescription: c.linkDescription }));
+    setPerAdCopy(files.map(() => ({ ...commonCopy, headline: c.headline, primaryText: c.primaryText, linkDescription: c.linkDescription })));
+    toast.success("Variante aplicada al formulario");
+  }
+
   function updatePerAdCopy(index: number, field: keyof AdCopy, value: string) {
     setPerAdCopy((prev) => { const next = [...prev]; next[index] = { ...next[index], [field]: value }; return next; });
   }
@@ -240,7 +285,9 @@ export function UploadClient({ defaults }: UploadClientProps) {
         };
         setCommonCopy(loaded);
         setPerAdCopy(files.map(() => ({ ...loaded })));
-        toast.success("Copy cargado desde el anuncio");
+        setSourceCopies(data.copies ?? []);
+        const count = data.copies?.length ?? 1;
+        toast.success(`Copy cargado desde el anuncio (${count} variante${count > 1 ? "s" : ""})`);
       } else {
         toast.error("No se pudo extraer el copy del anuncio (probablemente es multi-ratio)");
       }
@@ -351,20 +398,28 @@ export function UploadClient({ defaults }: UploadClientProps) {
     setResults([]);
 
     try {
-      // Phase 1: upload each file individually to /api/upload/media
+      // Check pre-uploaded media
+      if (mediaUploads.length === 0) {
+        throw new Error("Primero subí los archivos a Meta con el botón 'Subir archivos a Meta'");
+      }
+      const pending = mediaUploads.filter((m) => m.status === "pending" || m.status === "uploading");
+      const failed = mediaUploads.filter((m) => m.status === "error");
+      if (pending.length > 0) {
+        throw new Error("Esperá a que terminen de subirse los archivos");
+      }
+      if (failed.length > 0) {
+        throw new Error(`Error en archivos: ${failed.map((e) => e.filename).join(", ")}`);
+      }
       const media: { type: "image" | "video"; hash?: string; video_id?: string; filename: string }[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        setUploadStep(`Subiendo archivo ${i + 1} de ${files.length}: ${file.name}`);
-        const fd = new FormData();
-        fd.append("file", file);
-        const res = await fetch("/api/upload/media", { method: "POST", body: fd });
-        const data = await res.json();
-        if (!res.ok) throw new Error(`${file.name}: ${data.error ?? "Error al subir"}`);
-        media.push(data);
+      for (const mu of mediaUploads) {
+        if (mu.status === "done" && (mu.hash || mu.video_id)) {
+          media.push({ type: mu.type as "image" | "video", hash: mu.hash, video_id: mu.video_id, filename: mu.filename ?? "" });
+        }
+      }
+      if (media.length === 0) {
+        throw new Error("No hay archivos subidos correctamente");
       }
 
-      // Phase 2: create ads with pre-uploaded media IDs
       setUploadStep("Creando ads...");
       const res = await fetch("/api/upload", {
         method: "POST",
@@ -440,12 +495,14 @@ export function UploadClient({ defaults }: UploadClientProps) {
                 const member = isInGroup ? groups[groupIdx].find((m) => m.fileIdx === i) : null;
                 return (
                   <div key={i} className={`flex items-center gap-3 px-4 py-3 ${isInGroup ? "bg-[#3b82f6]/5" : ""}`}>
-                    <input
-                      type="checkbox"
-                      checked={selectedFileIndices.has(i)}
-                      onChange={() => toggleFileSelect(i)}
-                      className="accent-[#3b82f6] shrink-0"
-                    />
+                    {false && (
+                      <input
+                        type="checkbox"
+                        checked={selectedFileIndices.has(i)}
+                        onChange={() => toggleFileSelect(i)}
+                        className="accent-[#3b82f6] shrink-0"
+                      />
+                    )}
                     {previews[i] ? (
                       <img src={previews[i]} alt="" className="w-10 h-10 object-cover rounded shrink-0" />
                     ) : file.type.startsWith("video/") ? (
@@ -462,6 +519,14 @@ export function UploadClient({ defaults }: UploadClientProps) {
                       <p className="text-xs font-mono text-[#555]">
                         {file.type.startsWith("video/") ? "Video" : "Imagen"} · {(file.size / 1024 / 1024).toFixed(1)} MB
                         {isInGroup && <span className="text-[#3b82f6] ml-2">Grupo {groupIdx + 1}</span>}
+                        {(() => {
+                          const mu = mediaUploads.find((m) => m.fileIdx === i);
+                          if (!mu || mu.status === "pending") return null;
+                          if (mu.status === "uploading") return <span className="text-[#f5a623] ml-2">Subiendo...</span>;
+                          if (mu.status === "done") return <span className="text-[#10b981] ml-2">✓ {mu.type === "video" ? mu.video_id?.slice(0,8) : mu.hash?.slice(0,8)}</span>;
+                          if (mu.status === "error") return <span className="text-[#ef4444] ml-2">✗ {mu.error?.slice(0,40)}</span>;
+                          return null;
+                        })()}
                       </p>
                     </div>
                     {false && (
@@ -491,6 +556,29 @@ export function UploadClient({ defaults }: UploadClientProps) {
               <p className="text-xs font-mono text-[#555]">
                 {groups.length} grupo{groups.length > 1 ? "s" : ""} multi-ratio · {adItems.length} ads en total
               </p>
+            )}
+
+            {/* Upload to Meta button */}
+            {mediaUploads.length === 0 && (
+              <button
+                onClick={uploadAllFiles}
+                disabled={uploadingMedia}
+                className="w-full bg-[#1c1c1c] hover:bg-[#2a2a2a] disabled:opacity-40 text-[#f5f5f5] font-mono text-sm py-2.5 rounded-md border border-[#2a2a2a] transition-colors"
+              >
+                {uploadingMedia ? "Subiendo..." : "Subir archivos a Meta"}
+              </button>
+            )}
+            {mediaUploads.length > 0 && mediaUploads.every((m) => m.status === "done") && (
+              <p className="text-xs font-mono text-[#10b981] text-center">✓ Todos los archivos subidos a Meta</p>
+            )}
+            {mediaUploads.some((m) => m.status === "error") && (
+              <button
+                onClick={uploadAllFiles}
+                disabled={uploadingMedia}
+                className="w-full bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] font-mono text-sm py-2.5 rounded-md border border-[#ef4444]/30 transition-colors"
+              >
+                Reintentar subida
+              </button>
             )}
           </>
         )}
@@ -657,16 +745,95 @@ export function UploadClient({ defaults }: UploadClientProps) {
         </section>
       )}
 
+      {/* Section 2.75: Variantes de copy del anuncio fuente */}
+      {sourceCopies.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Variantes de copy ({sourceCopies.length})</h2>
+            <button
+              onClick={() => { setSourceCopies([]); setCommonCopy({ headline: "", primaryText: "", linkDescription: "", url: "", cta: "SHOP_NOW" }); setPerAdCopy(files.map(() => ({ headline: "", primaryText: "", linkDescription: "", url: "", cta: "SHOP_NOW" }))); }}
+              className="text-xs font-mono text-[#555] hover:text-[#ef4444] transition-colors"
+            >
+              Limpiar
+            </button>
+          </div>
+          <div className="border border-[#2a2a2a] rounded-lg overflow-hidden">
+            <table className="w-full text-xs font-mono">
+              <thead className="bg-[#141414] border-b border-[#2a2a2a]">
+                <tr>
+                  <th className="text-left px-3 py-2 text-[#555] w-8">#</th>
+                  <th className="text-left px-3 py-2 text-[#555]">Headline</th>
+                  <th className="text-left px-3 py-2 text-[#555]">Primary Text</th>
+                  <th className="text-left px-3 py-2 text-[#555]">Descripción</th>
+                  <th className="text-left px-3 py-2 text-[#555] w-24"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#2a2a2a]">
+                {sourceCopies.map((c, i) => (
+                  <tr key={i} className="bg-[#0a0a0a]">
+                    <td className="px-3 py-2 text-[#555] text-center">{i + 1}</td>
+                    <td className="px-2 py-2">
+                      <input
+                        type="text"
+                        value={c.headline}
+                        onChange={(e) => updateSourceCopy(i, "headline", e.target.value)}
+                        className="w-full bg-transparent border border-[#2a2a2a] rounded px-2 py-1 text-[#f5f5f5] focus:outline-none focus:border-[#3b82f6]"
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <textarea
+                        value={c.primaryText}
+                        onChange={(e) => updateSourceCopy(i, "primaryText", e.target.value)}
+                        rows={2}
+                        className="w-full bg-transparent border border-[#2a2a2a] rounded px-2 py-1 text-[#f5f5f5] focus:outline-none focus:border-[#3b82f6] resize-none"
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        type="text"
+                        value={c.linkDescription}
+                        onChange={(e) => updateSourceCopy(i, "linkDescription", e.target.value)}
+                        className="w-full bg-transparent border border-[#2a2a2a] rounded px-2 py-1 text-[#f5f5f5] focus:outline-none focus:border-[#3b82f6]"
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => applySourceCopyToCommon(i)}
+                          className="text-[10px] font-mono px-2 py-1 bg-[#3b82f6]/10 text-[#3b82f6] hover:bg-[#3b82f6]/20 rounded transition-colors"
+                          title="Usar esta variante en el formulario"
+                        >
+                          Usar
+                        </button>
+                        <button
+                          onClick={() => removeSourceCopy(i)}
+                          className="text-[10px] font-mono px-2 py-1 bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444]/20 rounded transition-colors"
+                          title="Eliminar variante"
+                        >
+                          X
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {/* Section 3: Copy */}
       <section className="space-y-4">
         <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Copy</h2>
-        <div className="space-y-1">
-          <label className={labelClass}>Página de Facebook</label>
-          <select value={pageId} onChange={(e) => setPageId(e.target.value)} className={selectClass}>
-            <option value="">Seleccioná una página</option>
-            {pages.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </div>
+        {!defaults?.facebook_page_id && (
+          <div className="space-y-1">
+            <label className={labelClass}>Página de Facebook</label>
+            <select value={pageId} onChange={(e) => setPageId(e.target.value)} className={selectClass}>
+              <option value="">Seleccioná una página</option>
+              {pages.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+        )}
 
         <div className="flex gap-4">
           {(["common", "unique"] as const).map((mode) => (
@@ -890,6 +1057,23 @@ export function UploadClient({ defaults }: UploadClientProps) {
       >
         {uploading ? (uploadStep || "Creando ads...") : `Crear ${adItems.length > 0 ? adItems.length : ""} ads`}
       </button>
+
+      {/* Log panel */}
+      {(uploading || results.length > 0) && (
+        <section className="space-y-2">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Log</h2>
+          <div className="border border-[#2a2a2a] rounded-lg bg-[#0a0a0a] p-3 font-mono text-xs space-y-1 max-h-48 overflow-y-auto">
+            {uploadStep && (
+              <p className="text-[#3b82f6]">{uploadStep}</p>
+            )}
+            {results.map((r, i) => (
+              <p key={i} className={r.error ? "text-[#ef4444]" : "text-[#10b981]"}>
+                {r.error ? `✗ ${r.name}: ${r.error}` : `✓ ${r.name} → ${r.adId}`}
+              </p>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -32,7 +32,7 @@ export async function GET() {
       },
     }));
     body.set("access_token", token);
-    const testRes = await fetch(`https://graph.facebook.com/v21.0/${account.ad_account_id}/adcreatives`, { method: "POST", body });
+    const testRes = await fetch(`https://graph.facebook.com/v25.0/${account.ad_account_id}/adcreatives`, { method: "POST", body });
     creativeTest = await testRes.json();
   }
 

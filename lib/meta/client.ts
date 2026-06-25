@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { accounts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-const BASE_URL = "https://graph.facebook.com/v21.0";
+const BASE_URL = "https://graph.facebook.com/v25.0";
 
 export type MetaError = {
   code: number;

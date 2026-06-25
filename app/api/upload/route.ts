@@ -4,7 +4,7 @@ import { getTokenForAccount } from "@/lib/meta/client";
 import { db } from "@/lib/db";
 import { upload_history } from "@/lib/db/schema";
 
-const BASE_URL = "https://graph.facebook.com/v21.0";
+const BASE_URL = "https://graph.facebook.com/v25.0";
 
 type AdCopy = {
   headline: string;
