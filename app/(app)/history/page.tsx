@@ -18,16 +18,16 @@ export default async function HistoryPage() {
   return (
     <div className="max-w-5xl space-y-6">
       <div>
-        <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">History</h1>
+        <h1 className="font-mono text-xl font-semibold text-foreground">History</h1>
         <p className="text-[#888] text-sm font-mono mt-1">{history.length} uploads registrados</p>
       </div>
 
       {history.length === 0 ? (
         <p className="text-[#888] text-sm font-mono">Sin actividad aún. Subí tu primer ad desde Upload.</p>
       ) : (
-        <div className="border border-[#2a2a2a] rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           <table className="w-full text-xs font-mono">
-            <thead className="bg-[#141414] border-b border-[#2a2a2a]">
+            <thead className="bg-card border-b border-border">
               <tr>
                 <th className="text-left px-4 py-3 text-[#888]">Fecha</th>
                 <th className="text-left px-4 py-3 text-[#888]">Ad</th>
@@ -40,7 +40,7 @@ export default async function HistoryPage() {
             </thead>
             <tbody className="divide-y divide-[#2a2a2a]">
               {history.map((h) => (
-                <tr key={h.id} className="hover:bg-[#141414] transition-colors">
+                <tr key={h.id} className="hover:bg-card transition-colors">
                   <td className="px-4 py-3 text-[#888] whitespace-nowrap">
                     {h.created_at
                       ? new Date(h.created_at).toLocaleString("es-AR", {
@@ -52,7 +52,7 @@ export default async function HistoryPage() {
                         })
                       : "—"}
                   </td>
-                  <td className="px-4 py-3 text-[#f5f5f5] max-w-[160px] truncate">
+                  <td className="px-4 py-3 text-foreground max-w-[160px] truncate">
                     {h.ad_name ?? h.ad_id ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-[#aaa] max-w-[140px] truncate">
@@ -68,16 +68,16 @@ export default async function HistoryPage() {
                     <span className={`px-1.5 py-0.5 rounded text-[10px] ${
                       h.initial_status === "PAUSED"
                         ? "bg-[#555]/20 text-[#888]"
-                        : "bg-[#10b981]/10 text-[#10b981]"
+                        : "bg-success/10 text-success"
                     }`}>
                       {h.initial_status ?? "—"}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     {h.result === "success" ? (
-                      <span className="text-[#10b981]">✓ ok</span>
+                      <span className="text-success">✓ ok</span>
                     ) : (
-                      <span className="text-[#ef4444]" title={h.error_message ?? ""}>
+                      <span className="text-destructive" title={h.error_message ?? ""}>
                         ✗ error
                       </span>
                     )}

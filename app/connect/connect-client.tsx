@@ -18,11 +18,11 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <Zap className="w-6 h-6 text-[#3b82f6]" />
+            <Zap className="w-6 h-6 text-primary" />
             <span className="font-mono text-lg font-semibold">ads.uploader</span>
           </div>
           <p className="text-[#888] text-sm font-mono">
@@ -35,7 +35,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
             <p className="text-xs font-mono text-[#888] uppercase tracking-widest">
               Cuentas conectadas
             </p>
-            <div className="border border-[#2a2a2a] rounded-md divide-y divide-[#2a2a2a]">
+            <div className="border border-border rounded-md divide-y divide-[#2a2a2a]">
               {accounts.map((account) => (
                 <div
                   key={account.id}
@@ -43,12 +43,12 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
                 >
                   <div className="flex items-center gap-3">
                     {account.status === "active" ? (
-                      <CheckCircle className="w-4 h-4 text-[#10b981] shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-success shrink-0" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 text-[#ef4444] shrink-0" />
+                      <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
                     )}
                     <div>
-                      <p className="text-sm font-mono text-[#f5f5f5]">
+                      <p className="text-sm font-mono text-foreground">
                         {account.ad_account_name ?? account.name}
                       </p>
                       <p className="text-xs font-mono text-[#888]">
@@ -59,7 +59,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa] h-7 px-2"
+                    className="text-xs font-mono text-primary hover:text-primary h-7 px-2"
                     onClick={() => {
                       setReconnectId(account.id);
                     }}
@@ -74,8 +74,8 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
         )}
 
         {reconnectId && (
-          <div className="bg-[#f59e0b]/10 border border-[#f59e0b]/20 rounded-md px-4 py-3">
-            <p className="text-xs font-mono text-[#f59e0b]">
+          <div className="bg-warning/10 border border-warning/20 rounded-md px-4 py-3">
+            <p className="text-xs font-mono text-warning">
               Reconectando:{" "}
               <strong>
                 {accounts.find((a) => a.id === reconnectId)?.ad_account_name ?? accounts.find((a) => a.id === reconnectId)?.name}
@@ -83,7 +83,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
               . El token y la configuración se preservarán.
             </p>
             <button
-              className="text-xs font-mono text-[#888] hover:text-[#888] mt-1 underline"
+              className="text-xs font-mono text-[#888] hover:text-muted-foreground mt-1 underline"
               onClick={() => setReconnectId(null)}
             >
               Cancelar
@@ -92,7 +92,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
         )}
 
         <Button
-          className="w-full font-mono text-sm bg-[#3b82f6] hover:bg-[#60a5fa] text-white"
+          className="w-full font-mono text-sm bg-primary hover:bg-primary/80 text-white"
           onClick={handleConnect}
         >
           {reconnectId ? (
@@ -112,7 +112,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
           <div className="text-center">
             <a
               href="/dashboard"
-              className="text-xs font-mono text-[#888] hover:text-[#888] underline"
+              className="text-xs font-mono text-[#888] hover:text-muted-foreground underline"
             >
               ← Volver al dashboard
             </a>

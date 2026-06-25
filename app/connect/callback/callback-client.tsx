@@ -81,16 +81,16 @@ export function CallbackClient({
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <Zap className="w-6 h-6 text-[#3b82f6]" />
+            <Zap className="w-6 h-6 text-primary" />
             <span className="font-mono text-lg font-semibold">ads.uploader</span>
           </div>
           <div className="flex items-center justify-center gap-2">
-            <CheckCircle className="w-4 h-4 text-[#10b981]" />
-            <p className="text-[#10b981] text-sm font-mono">
+            <CheckCircle className="w-4 h-4 text-success" />
+            <p className="text-success text-sm font-mono">
               Autenticado como {metaUser.name}
             </p>
           </div>
@@ -98,8 +98,8 @@ export function CallbackClient({
 
         <div className="space-y-4">
           {reconnectAccount && (
-            <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/20 rounded-md px-4 py-3">
-              <p className="text-xs font-mono text-[#3b82f6]">
+            <div className="bg-primary/10 border border-[#3b82f6]/20 rounded-md px-4 py-3">
+              <p className="text-xs font-mono text-primary">
                 Reconectando cuenta:{" "}
                 <strong>{reconnectAccount.ad_account_name}</strong>
               </p>
@@ -114,30 +114,30 @@ export function CallbackClient({
               Elegí la Ad Account
             </label>
             {activeAdAccounts.length === 0 ? (
-              <p className="text-xs font-mono text-[#ef4444]">
+              <p className="text-xs font-mono text-destructive">
                 No hay ad accounts activas en esta cuenta.
               </p>
             ) : (
-              <div className="border border-[#2a2a2a] rounded-md divide-y divide-[#2a2a2a]">
+              <div className="border border-border rounded-md divide-y divide-[#2a2a2a]">
                 {activeAdAccounts.map((account) => (
                   <button
                     key={account.id}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                       selectedAdAccountId === account.id
-                        ? "bg-[#3b82f6]/10"
-                        : "hover:bg-[#1c1c1c]"
+                        ? "bg-primary/10"
+                        : "hover:bg-accent"
                     }`}
                     onClick={() => setSelectedAdAccountId(account.id)}
                   >
                     <div
                       className={`w-3.5 h-3.5 rounded-full border-2 shrink-0 transition-colors ${
                         selectedAdAccountId === account.id
-                          ? "border-[#3b82f6] bg-[#3b82f6]"
+                          ? "border-[#3b82f6] bg-primary"
                           : "border-[#555]"
                       }`}
                     />
                     <div className="min-w-0">
-                      <p className="text-sm font-mono text-[#f5f5f5] truncate">
+                      <p className="text-sm font-mono text-foreground truncate">
                         {account.name}
                       </p>
                       <p className="text-xs font-mono text-[#888]">
@@ -152,7 +152,7 @@ export function CallbackClient({
         </div>
 
         <Button
-          className="w-full font-mono text-sm bg-[#3b82f6] hover:bg-[#60a5fa] text-white"
+          className="w-full font-mono text-sm bg-primary hover:bg-primary/80 text-white"
           onClick={handleSave}
           disabled={saving || activeAdAccounts.length === 0}
         >

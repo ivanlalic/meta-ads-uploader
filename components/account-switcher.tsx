@@ -29,29 +29,29 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="w-full flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-[#1c1c1c] transition-colors group">
+      <DropdownMenuTrigger className="w-full flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-sidebar-accent transition-colors group">
         <div className="flex items-center gap-2 min-w-0">
           {active ? (
             <>
               <div
                 className={cn(
                   "w-1.5 h-1.5 rounded-full shrink-0",
-                  active.status === "active" ? "bg-[#10b981]" : "bg-[#ef4444]"
+                  active.status === "active" ? "bg-success" : "bg-destructive"
                 )}
               />
-              <span className="text-xs font-mono text-[#f5f5f5] truncate">
+              <span className="text-xs font-mono text-sidebar-foreground truncate">
                 {active.name}
               </span>
             </>
           ) : (
-            <span className="text-xs font-mono text-[#888]">Sin cuenta</span>
+            <span className="text-xs font-mono text-muted-foreground">Sin cuenta</span>
           )}
         </div>
-        <ChevronDown className="w-3 h-3 text-[#888] shrink-0" />
+        <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="w-52 bg-[#1c1c1c] border-[#2a2a2a]"
+        className="w-52 bg-popover border-border"
       >
         {accounts.map((account) => (
           <DropdownMenuItem
@@ -60,17 +60,17 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
             onClick={() => handleSwitch(account.id)}
           >
             {account.status === "active" ? (
-              <CheckCircle className="w-3 h-3 text-[#10b981] shrink-0" />
+              <CheckCircle className="w-3 h-3 text-success shrink-0" />
             ) : (
-              <AlertCircle className="w-3 h-3 text-[#ef4444] shrink-0" />
+              <AlertCircle className="w-3 h-3 text-destructive shrink-0" />
             )}
-            <span className="text-xs font-mono truncate">{account.name}</span>
+            <span className="text-xs font-mono truncate text-popover-foreground">{account.name}</span>
             {account.id === activeAccountId && (
-              <span className="ml-auto text-[10px] text-[#888]">activa</span>
+              <span className="ml-auto text-[10px] text-muted-foreground">activa</span>
             )}
           </DropdownMenuItem>
         ))}
-        {accounts.length > 0 && <DropdownMenuSeparator className="bg-[#2a2a2a]" />}
+        {accounts.length > 0 && <DropdownMenuSeparator className="bg-border" />}
         <DropdownMenuItem
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => router.push("/settings")}
@@ -84,8 +84,8 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => router.push("/connect")}
         >
-          <Plus className="w-3 h-3 text-[#3b82f6] shrink-0" />
-          <span className="text-xs font-mono text-[#3b82f6]">
+          <Plus className="w-3 h-3 text-primary shrink-0" />
+          <span className="text-xs font-mono text-primary">
             Conectar cuenta nueva
           </span>
         </DropdownMenuItem>

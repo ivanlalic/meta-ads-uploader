@@ -47,7 +47,7 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-3xl space-y-8">
       <div>
-        <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Dashboard</h1>
+        <h1 className="font-mono text-xl font-semibold text-foreground">Dashboard</h1>
         <p className="text-[#888] text-sm font-mono mt-1">
           {activeAccount?.name} · {activeAccount?.ad_account_id}
         </p>
@@ -55,17 +55,17 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
+        <div className="border border-border rounded-lg px-4 py-4">
           <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Total uploads</p>
-          <p className="text-2xl font-mono font-semibold text-[#f5f5f5] mt-1">{totalUploads}</p>
+          <p className="text-2xl font-mono font-semibold text-foreground mt-1">{totalUploads}</p>
         </div>
-        <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
+        <div className="border border-border rounded-lg px-4 py-4">
           <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Exitosos</p>
-          <p className="text-2xl font-mono font-semibold text-[#10b981] mt-1">{successCount}</p>
+          <p className="text-2xl font-mono font-semibold text-success mt-1">{successCount}</p>
         </div>
-        <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
+        <div className="border border-border rounded-lg px-4 py-4">
           <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Errores</p>
-          <p className="text-2xl font-mono font-semibold text-[#ef4444] mt-1">{errorCount}</p>
+          <p className="text-2xl font-mono font-semibold text-destructive mt-1">{errorCount}</p>
         </div>
       </div>
 
@@ -73,10 +73,10 @@ export default async function DashboardPage() {
       {daysLeft !== null && daysLeft <= 14 && (
         <div className={`border rounded-md px-4 py-3 ${
           daysLeft <= 3
-            ? "border-[#ef4444]/30 bg-[#ef4444]/5"
-            : "border-[#f59e0b]/30 bg-[#f59e0b]/5"
+            ? "border-destructive/30 bg-destructive/5"
+            : "border-warning/30 bg-warning/5"
         }`}>
-          <p className={`text-xs font-mono ${daysLeft <= 3 ? "text-[#ef4444]" : "text-[#f59e0b]"}`}>
+          <p className={`text-xs font-mono ${daysLeft <= 3 ? "text-destructive" : "text-warning"}`}>
             Token expira en {daysLeft} día{daysLeft !== 1 ? "s" : ""}.{" "}
             <Link href="/connect" className="underline">Reconectá la cuenta.</Link>
           </p>
@@ -88,7 +88,7 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between">
           <h2 className="font-mono text-xs text-[#888] uppercase tracking-widest">Actividad reciente</h2>
           {recentHistory.length > 0 && (
-            <Link href="/history" className="text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa]">
+            <Link href="/history" className="text-xs font-mono text-primary hover:text-primary">
               Ver todo →
             </Link>
           )}
@@ -96,11 +96,11 @@ export default async function DashboardPage() {
         {recentHistory.length === 0 ? (
           <p className="text-[#888] text-sm font-mono">Sin actividad aún.</p>
         ) : (
-          <div className="border border-[#2a2a2a] rounded-md divide-y divide-[#2a2a2a]">
+          <div className="border border-border rounded-md divide-y divide-[#2a2a2a]">
             {recentHistory.map((h) => (
               <div key={h.id} className="flex items-center justify-between px-4 py-3">
                 <div className="space-y-0.5 min-w-0">
-                  <p className="text-sm font-mono text-[#f5f5f5] truncate">{h.ad_name ?? h.ad_id}</p>
+                  <p className="text-sm font-mono text-foreground truncate">{h.ad_name ?? h.ad_id}</p>
                   <p className="text-xs font-mono text-[#888]">
                     {h.adset_name ?? h.adset_id} ·{" "}
                     {h.created_at
@@ -112,8 +112,8 @@ export default async function DashboardPage() {
                 </div>
                 <span className={`text-xs font-mono px-2 py-0.5 rounded shrink-0 ml-4 ${
                   h.result === "success"
-                    ? "text-[#10b981] bg-[#10b981]/10"
-                    : "text-[#ef4444] bg-[#ef4444]/10"
+                    ? "text-success bg-success/10"
+                    : "text-destructive bg-destructive/10"
                 }`}>
                   {h.result === "success" ? "ok" : "error"}
                 </span>

@@ -61,7 +61,7 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Settings</h1>
+        <h1 className="font-mono text-xl font-semibold text-foreground">Settings</h1>
         <p className="text-[#888] text-sm font-mono mt-1">
           {account.ad_account_name} · {account.ad_account_id}
         </p>
@@ -77,12 +77,12 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
           {loadingPages ? (
             <p className="text-xs font-mono text-[#888]">Cargando...</p>
           ) : pages.length === 0 ? (
-            <p className="text-xs font-mono text-[#ef4444]">No se encontraron páginas</p>
+            <p className="text-xs font-mono text-destructive">No se encontraron páginas</p>
           ) : (
             <select
               value={selectedPageId}
               onChange={(e) => setSelectedPageId(e.target.value)}
-              className="w-full bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] focus:outline-none focus:border-[#3b82f6]"
+              className="w-full bg-card border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-[#3b82f6]"
             >
               <option value="">Sin página</option>
               {pages.map((p) => (
@@ -93,7 +93,7 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
             </select>
           )}
           {selectedPage?.instagram_business_account && (
-            <p className="text-xs font-mono text-[#10b981]">
+            <p className="text-xs font-mono text-success">
               IG vinculado: {selectedPage.instagram_business_account.id}
             </p>
           )}
@@ -109,7 +109,7 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
             <select
               value={selectedPixelId}
               onChange={(e) => setSelectedPixelId(e.target.value)}
-              className="w-full bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] focus:outline-none focus:border-[#3b82f6]"
+              className="w-full bg-card border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-[#3b82f6]"
             >
               <option value="">Sin pixel</option>
               {pixels.map((p) => (
@@ -125,7 +125,7 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-50 text-white font-mono text-sm px-6 py-2 rounded-md transition-colors"
+        className="bg-primary hover:bg-primary/80 disabled:opacity-50 text-white font-mono text-sm px-6 py-2 rounded-md transition-colors"
       >
         {saving ? "Guardando..." : "Guardar configuración"}
       </button>
@@ -163,7 +163,7 @@ function AvailableAccountsSection({ accountId }: { accountId: string }) {
         <button
           onClick={fetchAvailable}
           disabled={loading}
-          className="text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa] transition-colors disabled:opacity-50"
+          className="text-xs font-mono text-primary hover:text-primary transition-colors disabled:opacity-50"
         >
           {loading ? "Cargando..." : "Mostrar disponibles"}
         </button>
@@ -174,16 +174,16 @@ function AvailableAccountsSection({ accountId }: { accountId: string }) {
         </p>
       )}
       {available.length > 0 && (
-        <div className="border border-[#2a2a2a] rounded-md divide-y divide-[#2a2a2a]">
+        <div className="border border-border rounded-md divide-y divide-[#2a2a2a]">
           {available.map((a) => (
             <div key={a.id} className="flex items-center justify-between px-4 py-3">
               <div className="min-w-0">
-                <p className="text-sm font-mono text-[#f5f5f5] truncate">{a.name}</p>
+                <p className="text-sm font-mono text-foreground truncate">{a.name}</p>
                 <p className="text-xs font-mono text-[#888]">
                   {a.id} · {a.currency}
                 </p>
               </div>
-              <span className={`text-xs font-mono shrink-0 ml-4 ${a.connected ? "text-[#10b981]" : "text-[#888]"}`}>
+              <span className={`text-xs font-mono shrink-0 ml-4 ${a.connected ? "text-success" : "text-[#888]"}`}>
                 {a.connected ? "conectada" : "disponible"}
               </span>
             </div>

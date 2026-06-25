@@ -61,7 +61,7 @@ export function LoginForm() {
             placeholder="ej: Juan Pérez"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="bg-[#141414] border-[#2a2a2a] font-mono text-sm"
+            className="bg-card border-border font-mono text-sm"
             required
           />
         </div>
@@ -75,7 +75,7 @@ export function LoginForm() {
           placeholder="ej: juan@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="bg-[#141414] border-[#2a2a2a] font-mono text-sm"
+          className="bg-card border-border font-mono text-sm"
           required
         />
       </div>
@@ -88,14 +88,14 @@ export function LoginForm() {
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="bg-[#141414] border-[#2a2a2a] font-mono text-sm"
+          className="bg-card border-border font-mono text-sm"
           required
         />
       </div>
 
       <Button
         type="submit"
-        className="w-full font-mono text-sm bg-[#3b82f6] hover:bg-[#60a5fa] text-white"
+        className="w-full font-mono text-sm bg-primary hover:bg-primary/80 text-white"
         disabled={loading}
       >
         {loading
@@ -111,7 +111,7 @@ export function LoginForm() {
             ¿No tenés cuenta?{" "}
             <button
               type="button"
-              className="text-[#3b82f6] hover:underline"
+              className="text-primary hover:underline"
               onClick={() => setMode("register")}
             >
               Crear una
@@ -122,7 +122,7 @@ export function LoginForm() {
             ¿Ya tenés cuenta?{" "}
             <button
               type="button"
-              className="text-[#3b82f6] hover:underline"
+              className="text-primary hover:underline"
               onClick={() => setMode("login")}
             >
               Iniciar sesión

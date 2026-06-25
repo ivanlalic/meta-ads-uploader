@@ -14,14 +14,14 @@ type Ad = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "text-[#10b981] bg-[#10b981]/10",
+  ACTIVE: "text-success bg-success/10",
   PAUSED: "text-[#888] bg-[#555]/20",
   ARCHIVED: "text-[#888] bg-[#333]/20",
-  DELETED: "text-[#ef4444] bg-[#ef4444]/10",
-  DISAPPROVED: "text-[#ef4444] bg-[#ef4444]/10",
-  WITH_ISSUES: "text-[#f59e0b] bg-[#f59e0b]/10",
-  IN_PROCESS: "text-[#3b82f6] bg-[#3b82f6]/10",
-  PENDING_REVIEW: "text-[#f59e0b] bg-[#f59e0b]/10",
+  DELETED: "text-destructive bg-destructive/10",
+  DISAPPROVED: "text-destructive bg-destructive/10",
+  WITH_ISSUES: "text-warning bg-warning/10",
+  IN_PROCESS: "text-primary bg-primary/10",
+  PENDING_REVIEW: "text-warning bg-warning/10",
 };
 
 export function AdsClient() {
@@ -56,7 +56,7 @@ export function AdsClient() {
   return (
     <div className="max-w-5xl space-y-6">
       <div>
-        <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Ads</h1>
+        <h1 className="font-mono text-xl font-semibold text-foreground">Ads</h1>
         <p className="text-[#888] text-sm font-mono mt-1">
           {loading ? "Cargando..." : `${ads.length} ads en esta cuenta`}
         </p>
@@ -69,12 +69,12 @@ export function AdsClient() {
             placeholder="Buscar por nombre, campaña, adset..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] placeholder:text-[#333] focus:outline-none focus:border-[#3b82f6]"
+            className="flex-1 bg-card border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-[#333] focus:outline-none focus:border-[#3b82f6]"
           />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] focus:outline-none focus:border-[#3b82f6]"
+            className="bg-card border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-[#3b82f6]"
           >
             {statuses.map((s) => (
               <option key={s} value={s}>{s === "ALL" ? "Todos los estados" : s}</option>
@@ -90,9 +90,9 @@ export function AdsClient() {
       ) : filtered.length === 0 ? (
         <p className="text-[#888] text-sm font-mono">Sin resultados para esa búsqueda.</p>
       ) : (
-        <div className="border border-[#2a2a2a] rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           <table className="w-full text-xs font-mono">
-            <thead className="bg-[#141414] border-b border-[#2a2a2a]">
+            <thead className="bg-card border-b border-border">
               <tr>
                 <th className="text-left px-4 py-3 text-[#888]">Nombre</th>
                 <th className="text-left px-4 py-3 text-[#888]">Campaña</th>
@@ -103,8 +103,8 @@ export function AdsClient() {
             </thead>
             <tbody className="divide-y divide-[#2a2a2a]">
               {filtered.map((ad) => (
-                <tr key={ad.id} className="hover:bg-[#141414] transition-colors">
-                  <td className="px-4 py-3 text-[#f5f5f5] max-w-[180px] truncate">
+                <tr key={ad.id} className="hover:bg-card transition-colors">
+                  <td className="px-4 py-3 text-foreground max-w-[180px] truncate">
                     {ad.name}
                   </td>
                   <td className="px-4 py-3 text-[#aaa] max-w-[160px] truncate">

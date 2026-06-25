@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,11 +29,14 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${ibmPlexMono.variable} h-full dark`}
+      className={`${inter.variable} ${ibmPlexMono.variable} h-full`}
+      suppressHydrationWarning
     >
-      <body className="h-full bg-[#0a0a0a] text-[#f5f5f5] antialiased font-sans">
-        {children}
-        <Toaster theme="dark" position="bottom-right" />
+      <body className="h-full bg-background text-foreground antialiased font-sans">
+        <ThemeProvider>
+          {children}
+          <Toaster richColors position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

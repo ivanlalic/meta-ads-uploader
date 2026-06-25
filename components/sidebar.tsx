@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Upload,
@@ -9,6 +11,8 @@ import {
   History,
   Settings,
   Zap,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AccountSwitcher } from "./account-switcher";
@@ -29,6 +33,10 @@ interface SidebarProps {
 
 export function Sidebar({ accounts, activeAccountId }: SidebarProps) {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const activeAccount = accounts.find((a) => a.id === activeAccountId);
   const tokenDaysLeft = activeAccount?.token_expires_at
@@ -48,17 +56,31 @@ export function Sidebar({ accounts, activeAccountId }: SidebarProps) {
       : "red";
 
   return (
-    <aside className="w-[220px] shrink-0 flex flex-col h-screen bg-[#141414] border-r border-[#2a2a2a] sticky top-0">
-      <div className="p-4 border-b border-[#2a2a2a]">
-        <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-[#3b82f6]" />
-          <span className="font-mono text-sm font-semibold tracking-tight">
-            ads.uploader
-          </span>
+    <aside className="w-[220px] shrink-0 flex flex-col h-screen bg-sidebar border-r border-sidebar-border sticky top-0">
+      <div className="p-4 border-b border-sidebar-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-primary" />
+            <span className="font-mono text-sm font-semibold tracking-tight text-sidebar-foreground">
+              ads.uploader
+            </span>
+          </div>
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors"
+            >
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="p-3 border-b border-[#2a2a2a]">
+      <div className="p-3 border-b border-sidebar-border">
         <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} />
       </div>
 
@@ -70,8 +92,8 @@ export function Sidebar({ accounts, activeAccountId }: SidebarProps) {
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors mb-0.5",
               pathname === href || pathname.startsWith(href + "/")
-                ? "bg-[#1c1c1c] text-[#f5f5f5]"
-                : "text-[#888] hover:text-[#f5f5f5] hover:bg-[#1c1c1c]"
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
             )}
           >
             <Icon className="w-4 h-4 shrink-0" />
@@ -81,17 +103,17 @@ export function Sidebar({ accounts, activeAccountId }: SidebarProps) {
       </nav>
 
       {tokenStatus && (
-        <div className="p-3 border-t border-[#2a2a2a]">
+        <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-2 px-3 py-2">
             <div
               className={cn(
                 "w-2 h-2 rounded-full shrink-0",
-                tokenStatus === "green" && "bg-[#10b981]",
-                tokenStatus === "yellow" && "bg-[#f59e0b]",
-                tokenStatus === "red" && "bg-[#ef4444] animate-pulse"
+                tokenStatus === "green" && "bg-success",
+                tokenStatus === "yellow" && "bg-warning",
+                tokenStatus === "red" && "bg-destructive animate-pulse"
               )}
             />
-            <span className="text-xs text-[#888] font-mono">
+            <span className="text-xs text-muted-foreground font-mono">
               {tokenDaysLeft}d token
             </span>
           </div>

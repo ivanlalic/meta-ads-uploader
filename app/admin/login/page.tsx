@@ -32,11 +32,11 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <Shield className="w-6 h-6 text-[#f59e0b]" />
+            <Shield className="w-6 h-6 text-warning" />
             <span className="font-mono text-lg font-semibold">Admin</span>
           </div>
           <p className="text-[#888] text-xs font-mono">acceso restringido</p>
@@ -44,18 +44,18 @@ export default function AdminLoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-mono text-[#888] uppercase tracking-widest">Usuario</label>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin" className="bg-[#141414] border-[#2a2a2a] font-mono text-sm" />
+            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin" className="bg-card border-border font-mono text-sm" />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-mono text-[#888] uppercase tracking-widest">Contraseña</label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="bg-[#141414] border-[#2a2a2a] font-mono text-sm" />
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="bg-card border-border font-mono text-sm" />
           </div>
-          <Button type="submit" disabled={loading} className="w-full font-mono text-sm bg-[#f59e0b] hover:bg-[#fbbf24] text-black">
+          <Button type="submit" disabled={loading} className="w-full font-mono text-sm bg-warning hover:bg-[#fbbf24] text-black">
             {loading ? "Ingresando..." : "Ingresar"}
           </Button>
         </form>
         <div className="text-center">
-          <a href="/login" className="text-xs font-mono text-[#888] hover:text-[#888] underline">
+          <a href="/login" className="text-xs font-mono text-[#888] hover:text-muted-foreground underline">
             ← Volver al inicio
           </a>
         </div>

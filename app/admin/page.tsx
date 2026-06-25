@@ -32,28 +32,28 @@ export default async function AdminPage() {
     <div className="max-w-5xl mx-auto p-8 space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Admin Dashboard</h1>
+          <h1 className="font-mono text-xl font-semibold text-foreground">Admin Dashboard</h1>
           <p className="text-[#888] text-sm font-mono mt-1">Panel de administración de la plataforma</p>
         </div>
-        <a href="/dashboard" className="text-xs font-mono text-[#888] hover:text-[#888] underline">← Dashboard</a>
+        <a href="/dashboard" className="text-xs font-mono text-[#888] hover:text-muted-foreground underline">← Dashboard</a>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
+        <div className="border border-border rounded-lg px-4 py-4">
           <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Usuarios</p>
-          <p className="text-2xl font-mono font-semibold text-[#f5f5f5] mt-1">{totalUsers}</p>
+          <p className="text-2xl font-mono font-semibold text-foreground mt-1">{totalUsers}</p>
         </div>
-        <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
+        <div className="border border-border rounded-lg px-4 py-4">
           <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Cuentas Meta</p>
-          <p className="text-2xl font-mono font-semibold text-[#f5f5f5] mt-1">{totalAccounts}</p>
+          <p className="text-2xl font-mono font-semibold text-foreground mt-1">{totalAccounts}</p>
         </div>
-        <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
+        <div className="border border-border rounded-lg px-4 py-4">
           <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Uploads exitosos</p>
-          <p className="text-2xl font-mono font-semibold text-[#10b981] mt-1">{successCount}</p>
+          <p className="text-2xl font-mono font-semibold text-success mt-1">{successCount}</p>
         </div>
-        <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
+        <div className="border border-border rounded-lg px-4 py-4">
           <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Uploads fallidos</p>
-          <p className="text-2xl font-mono font-semibold text-[#ef4444] mt-1">{errorCount}</p>
+          <p className="text-2xl font-mono font-semibold text-destructive mt-1">{errorCount}</p>
         </div>
       </div>
 
@@ -62,9 +62,9 @@ export default async function AdminPage() {
         {userList.length === 0 ? (
           <p className="text-sm font-mono text-[#888]">Sin usuarios aún</p>
         ) : (
-          <div className="border border-[#2a2a2a] rounded-lg overflow-hidden">
+          <div className="border border-border rounded-lg overflow-hidden">
             <table className="w-full text-xs font-mono">
-              <thead className="bg-[#141414] border-b border-[#2a2a2a]">
+              <thead className="bg-card border-b border-border">
                 <tr>
                   <th className="text-left px-4 py-3 text-[#888]">Nombre</th>
                   <th className="text-left px-4 py-3 text-[#888]">Email</th>
@@ -75,17 +75,17 @@ export default async function AdminPage() {
               </thead>
               <tbody className="divide-y divide-[#2a2a2a]">
                 {userList.map((u) => (
-                  <tr key={u.id} className="hover:bg-[#141414] transition-colors">
-                    <td className="px-4 py-3 text-[#f5f5f5]">{u.name ?? "—"}</td>
+                  <tr key={u.id} className="hover:bg-card transition-colors">
+                    <td className="px-4 py-3 text-foreground">{u.name ?? "—"}</td>
                     <td className="px-4 py-3 text-[#aaa]">{u.email ?? "—"}</td>
                     <td className="px-4 py-3">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] ${
-                        u.role === "admin" ? "bg-[#f59e0b]/10 text-[#f59e0b]" : "bg-[#3b82f6]/10 text-[#3b82f6]"
+                        u.role === "admin" ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary"
                       }`}>
                         {u.role}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#f5f5f5]">{u.accountCount}</td>
+                    <td className="px-4 py-3 text-foreground">{u.accountCount}</td>
                     <td className="px-4 py-3 text-[#888]">
                       {u.created_at
                         ? new Date(u.created_at).toLocaleString("es-AR", {
