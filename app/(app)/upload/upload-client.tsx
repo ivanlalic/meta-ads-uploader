@@ -596,7 +596,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
           <span className="text-xs font-mono text-[#555]">Solo activos</span>
         </label>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {/* Campaign column */}
           <div className="space-y-2">
             <label className={labelClass}>Campaña</label>
@@ -615,29 +615,6 @@ export function UploadClient({ defaults }: UploadClientProps) {
                   </button>
                 ))}
               </div>
-            )}
-
-            {false && (
-              <>
-                <button onClick={() => setShowCreateCampaign((v) => !v)} className="flex items-center gap-1.5 text-xs font-mono text-[#555] hover:text-[#3b82f6] transition-colors">
-                  <Plus className="w-3 h-3" /> Nueva campaña
-                </button>
-                {showCreateCampaign && (
-                  <div className="border border-[#2a2a2a] rounded-md p-3 space-y-2 bg-[#141414]">
-                    <input type="text" placeholder="Nombre de la campaña" value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} className={inputClass} />
-                    <select value={newCampaignObjective} onChange={(e) => setNewCampaignObjective(e.target.value)} className={selectClass}>
-                      {CAMPAIGN_OBJECTIVES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                    <div className="flex gap-2">
-                      <button onClick={handleCreateCampaign} disabled={creatingCampaign}
-                        className="flex-1 bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-xs py-1.5 rounded transition-colors">
-                        {creatingCampaign ? "Creando..." : "Crear"}
-                      </button>
-                      <button onClick={() => setShowCreateCampaign(false)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] px-3 transition-colors">Cancelar</button>
-                    </div>
-                  </div>
-                )}
-              </>
             )}
           </div>
 
@@ -662,92 +639,31 @@ export function UploadClient({ defaults }: UploadClientProps) {
                 ))}
               </div>
             )}
+          </div>
 
-            {false && (
-              <>
-                <button onClick={openCreateAdset} className="flex items-center gap-1.5 text-xs font-mono text-[#555] hover:text-[#3b82f6] transition-colors">
-                  <Plus className="w-3 h-3" /> Nuevo Ad Set
-                </button>
-                {showCreateAdset && (
-                  <div className="border border-[#2a2a2a] rounded-md p-3 space-y-2 bg-[#141414]">
-                    {loadingSourceAdsets ? (
-                      <p className="text-xs font-mono text-[#555]">Cargando Ad Sets...</p>
-                    ) : sourceAdsets.length === 0 ? (
-                      <div className="space-y-2">
-                        <p className="text-xs font-mono text-[#aaa]">No hay Ad Sets en la cuenta. Creá uno en Ads Manager primero.</p>
-                        <a
-                          href="https://adsmanager.facebook.com"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa]"
-                        >
-                          → Abrir Ads Manager
-                        </a>
-                        <div className="pt-1">
-                          <button onClick={() => setShowCreateAdset(false)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] transition-colors">Cerrar</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-1">
-                          <p className="text-xs font-mono text-[#555]">Copiar configuración de:</p>
-                          <select value={newAdsetSourceId} onChange={(e) => setNewAdsetSourceId(e.target.value)} className={selectClass}>
-                            <option value="">Seleccioná Ad Set base...</option>
-                            {sourceAdsets.map((a) => <option key={a.id} value={a.id}>{a.campaignName} → {a.name}</option>)}
-                          </select>
-                        </div>
-                        <input type="text" placeholder="Nombre del nuevo Ad Set" value={newAdsetName} onChange={(e) => setNewAdsetName(e.target.value)} className={inputClass} />
-                        <div className="flex gap-2">
-                          <button onClick={handleCreateAdset} disabled={creatingAdset}
-                            className="flex-1 bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-xs py-1.5 rounded transition-colors">
-                            {creatingAdset ? "Creando..." : "Crear"}
-                          </button>
-                          <button onClick={() => setShowCreateAdset(false)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] px-3 transition-colors">Cancelar</button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </>
+          {/* Ads column */}
+          <div className="space-y-2">
+            <label className={labelClass}>Anuncio fuente</label>
+            {!selectedAdsetId ? (
+              <p className="text-xs font-mono text-[#333] px-1">Seleccioná un Ad Set primero</p>
+            ) : loadingSourceAds ? (
+              <p className="text-xs font-mono text-[#555] px-1">Cargando...</p>
+            ) : sourceAds.length === 0 ? (
+              <p className="text-xs font-mono text-[#555] px-3 py-3">Sin anuncios en este Ad Set</p>
+            ) : (
+              <div className="border border-[#2a2a2a] rounded-md max-h-48 overflow-y-auto">
+                {sourceAds.map((a) => (
+                  <button key={a.id} onClick={() => { setSelectedSourceAdId(a.id); loadAdDetails(a.id); }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm font-mono transition-colors ${selectedSourceAdId === a.id ? "bg-[#3b82f6]/10 text-[#f5f5f5]" : "text-[#aaa] hover:bg-[#1c1c1c]"}`}>
+                    <span className="truncate">{a.name}</span>
+                    {selectedSourceAdId === a.id && <ChevronRight className="w-3 h-3 shrink-0 text-[#3b82f6]" />}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
       </section>
-
-      {/* Section 2.5: Anuncio fuente (opcional) */}
-      {selectedAdsetId && (
-        <section className="space-y-3">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Anuncio fuente</h2>
-          <p className="text-xs font-mono text-[#555]">Seleccioná un anuncio existente para copiar su copy en los nuevos ads</p>
-          <div className="space-y-2">
-            {loadingSourceAds ? (
-              <p className="text-xs font-mono text-[#555]">Cargando anuncios...</p>
-            ) : sourceAds.length === 0 ? (
-              <p className="text-xs font-mono text-[#333]">No hay anuncios en este Ad Set</p>
-            ) : (
-              <div className="flex gap-2">
-                <select
-                  value={selectedSourceAdId}
-                  onChange={(e) => setSelectedSourceAdId(e.target.value)}
-                  className={selectClass}
-                >
-                  <option value="">Seleccionar anuncio...</option>
-                  {sourceAds.map((ad) => (
-                    <option key={ad.id} value={ad.id}>{ad.name}</option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => loadAdDetails(selectedSourceAdId)}
-                  disabled={!selectedSourceAdId || loadingAdDetails}
-                  className="shrink-0 bg-[#3b82f6] hover:bg-[#60a5fa] disabled:opacity-40 text-white font-mono text-xs px-4 py-2 rounded-md transition-colors"
-                >
-                  {loadingAdDetails ? "Cargando..." : "Cargar datos"}
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
 
       {/* Section 2.75: Variantes de copy del anuncio fuente */}
       {sourceCopies.length > 0 && (
