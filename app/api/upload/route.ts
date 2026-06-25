@@ -83,6 +83,8 @@ async function createSingleCreative(
   return json.id as string;
 }
 
+type GroupMember = { fileIdx: number; placement: "feed" | "stories" };
+
 async function createPlacementCreative(
   adAccountId: string,
   token: string,
