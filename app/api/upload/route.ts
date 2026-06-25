@@ -75,11 +75,13 @@ async function createSingleCreative(
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/adcreatives`, { method: "POST", body });
   const json = await res.json();
-  if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}${json.error.error_subcode ? ` (${json.error.error_subcode})` : ""}`);
+  if (json.error) {
+    const userMsg = json.error.error_user_msg ? " — " + json.error.error_user_msg : "";
+    const userTitle = json.error.error_user_title ? " (" + json.error.error_user_title + ")" : "";
+    throw new Error("[" + json.error.code + "] " + json.error.message + (json.error.error_subcode ? " (" + json.error.error_subcode + ")" : "") + userTitle + userMsg);
+  }
   return json.id as string;
 }
-
-type GroupMember = { fileIdx: number; placement: "feed" | "stories" };
 
 async function createPlacementCreative(
   adAccountId: string,
@@ -158,7 +160,11 @@ async function createPlacementCreative(
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/adcreatives`, { method: "POST", body });
   const json = await res.json();
-  if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}${json.error.error_subcode ? ` (${json.error.error_subcode})` : ""}`);
+  if (json.error) {
+    const userMsg = json.error.error_user_msg ? " — " + json.error.error_user_msg : "";
+    const userTitle = json.error.error_user_title ? " (" + json.error.error_user_title + ")" : "";
+    throw new Error("[" + json.error.code + "] " + json.error.message + (json.error.error_subcode ? " (" + json.error.error_subcode + ")" : "") + userTitle + userMsg);
+  }
   return json.id as string;
 }
 
@@ -180,7 +186,11 @@ async function createAd(
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/ads`, { method: "POST", body });
   const json = await res.json();
-  if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}${json.error.error_subcode ? ` (${json.error.error_subcode})` : ""}`);
+  if (json.error) {
+    const userMsg = json.error.error_user_msg ? " — " + json.error.error_user_msg : "";
+    const userTitle = json.error.error_user_title ? " (" + json.error.error_user_title + ")" : "";
+    throw new Error("[" + json.error.code + "] " + json.error.message + (json.error.error_subcode ? " (" + json.error.error_subcode + ")" : "") + userTitle + userMsg);
+  }
   return json.id as string;
 }
 
