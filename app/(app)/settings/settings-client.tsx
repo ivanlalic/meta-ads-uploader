@@ -129,6 +129,67 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
       >
         {saving ? "Guardando..." : "Guardar configuración"}
       </button>
+
+      <AvailableAccountsSection accountId={account.id} />
     </div>
+  );
+}
+
+function AvailableAccountsSection({ accountId }: { accountId: string }) {
+  const [available, setAvailable] = useState<{ id: string; name: string; currency: string; connected: boolean }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  async function fetchAvailable() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/meta/available-accounts?accountId=${accountId}`);
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setAvailable(data.data);
+      }
+    } catch {
+      toast.error("Error al cargar cuentas disponibles");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">
+          Ad Accounts disponibles
+        </h2>
+        <button
+          onClick={fetchAvailable}
+          disabled={loading}
+          className="text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa] transition-colors disabled:opacity-50"
+        >
+          {loading ? "Cargando..." : "Mostrar disponibles"}
+        </button>
+      </div>
+      {available.length === 0 && !loading && (
+        <p className="text-xs font-mono text-[#888]">
+          Hacé clic en "Mostrar disponibles" para ver todas las ad accounts vinculadas a tu cuenta de Meta.
+        </p>
+      )}
+      {available.length > 0 && (
+        <div className="border border-[#2a2a2a] rounded-md divide-y divide-[#2a2a2a]">
+          {available.map((a) => (
+            <div key={a.id} className="flex items-center justify-between px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-mono text-[#f5f5f5] truncate">{a.name}</p>
+                <p className="text-xs font-mono text-[#888]">
+                  {a.id} · {a.currency}
+                </p>
+              </div>
+              <span className={`text-xs font-mono shrink-0 ml-4 ${a.connected ? "text-[#10b981]" : "text-[#888]"}`}>
+                {a.connected ? "conectada" : "disponible"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronDown, Plus, CheckCircle, AlertCircle } from "lucide-react";
+import { ChevronDown, Plus, CheckCircle, AlertCircle, List } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,11 +73,20 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
         {accounts.length > 0 && <DropdownMenuSeparator className="bg-[#2a2a2a]" />}
         <DropdownMenuItem
           className="flex items-center gap-2 cursor-pointer"
+          onClick={() => router.push("/settings")}
+        >
+          <List className="w-3 h-3 text-[#888] shrink-0" />
+          <span className="text-xs font-mono text-[#888]">
+            Ver cuentas disponibles
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex items-center gap-2 cursor-pointer"
           onClick={() => router.push("/connect")}
         >
           <Plus className="w-3 h-3 text-[#3b82f6] shrink-0" />
           <span className="text-xs font-mono text-[#3b82f6]">
-            Conectar cuenta
+            Conectar cuenta nueva
           </span>
         </DropdownMenuItem>
       </DropdownMenuContent>

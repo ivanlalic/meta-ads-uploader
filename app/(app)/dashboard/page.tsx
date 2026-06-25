@@ -1,7 +1,8 @@
+import { redirect } from "next/navigation";
 import { getAllAccounts, getActiveAccountId, getAccountById } from "@/app/actions/accounts";
 import { db } from "@/lib/db";
 import { upload_history } from "@/lib/db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -13,15 +14,7 @@ export default async function DashboardPage() {
   const accountId = activeId ?? allAccounts[0]?.id ?? null;
 
   if (!accountId) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-4">
-        <pre className="text-[#888] text-xs font-mono text-center">
-          {`  ╔══════════════════╗\n  ║  sin cuentas     ║\n  ╚══════════════════╝`}
-        </pre>
-        <p className="text-[#888] text-sm font-mono">Conectá una cuenta para empezar.</p>
-        <a href="/connect" className="text-[#3b82f6] text-sm font-mono hover:underline">→ /connect</a>
-      </div>
-    );
+    redirect("/connect");
   }
 
   const [activeAccount, recentHistory, statsRows] = await Promise.all([
