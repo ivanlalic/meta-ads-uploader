@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   if (!accountId) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <pre className="text-[#555] text-xs font-mono text-center">
+        <pre className="text-[#888] text-xs font-mono text-center">
           {`  ╔══════════════════╗\n  ║  sin cuentas     ║\n  ╚══════════════════╝`}
         </pre>
         <p className="text-[#888] text-sm font-mono">Conectá una cuenta para empezar.</p>
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
     <div className="max-w-3xl space-y-8">
       <div>
         <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Dashboard</h1>
-        <p className="text-[#555] text-sm font-mono mt-1">
+        <p className="text-[#888] text-sm font-mono mt-1">
           {activeAccount?.name} · {activeAccount?.ad_account_id}
         </p>
       </div>
@@ -63,15 +63,15 @@ export default async function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
-          <p className="text-xs font-mono text-[#555] uppercase tracking-widest">Total uploads</p>
+          <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Total uploads</p>
           <p className="text-2xl font-mono font-semibold text-[#f5f5f5] mt-1">{totalUploads}</p>
         </div>
         <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
-          <p className="text-xs font-mono text-[#555] uppercase tracking-widest">Exitosos</p>
+          <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Exitosos</p>
           <p className="text-2xl font-mono font-semibold text-[#10b981] mt-1">{successCount}</p>
         </div>
         <div className="border border-[#2a2a2a] rounded-lg px-4 py-4">
-          <p className="text-xs font-mono text-[#555] uppercase tracking-widest">Errores</p>
+          <p className="text-xs font-mono text-[#888] uppercase tracking-widest">Errores</p>
           <p className="text-2xl font-mono font-semibold text-[#ef4444] mt-1">{errorCount}</p>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
       {/* Recent activity */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="font-mono text-xs text-[#555] uppercase tracking-widest">Actividad reciente</h2>
+          <h2 className="font-mono text-xs text-[#888] uppercase tracking-widest">Actividad reciente</h2>
           {recentHistory.length > 0 && (
             <Link href="/history" className="text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa]">
               Ver todo →
@@ -101,14 +101,14 @@ export default async function DashboardPage() {
           )}
         </div>
         {recentHistory.length === 0 ? (
-          <p className="text-[#555] text-sm font-mono">Sin actividad aún.</p>
+          <p className="text-[#888] text-sm font-mono">Sin actividad aún.</p>
         ) : (
           <div className="border border-[#2a2a2a] rounded-md divide-y divide-[#2a2a2a]">
             {recentHistory.map((h) => (
               <div key={h.id} className="flex items-center justify-between px-4 py-3">
                 <div className="space-y-0.5 min-w-0">
                   <p className="text-sm font-mono text-[#f5f5f5] truncate">{h.ad_name ?? h.ad_id}</p>
-                  <p className="text-xs font-mono text-[#555]">
+                  <p className="text-xs font-mono text-[#888]">
                     {h.adset_name ?? h.adset_id} ·{" "}
                     {h.created_at
                       ? new Date(h.created_at).toLocaleString("es-AR", {

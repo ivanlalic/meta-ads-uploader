@@ -44,10 +44,10 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
               </span>
             </>
           ) : (
-            <span className="text-xs font-mono text-[#555]">Sin cuenta</span>
+            <span className="text-xs font-mono text-[#888]">Sin cuenta</span>
           )}
         </div>
-        <ChevronDown className="w-3 h-3 text-[#555] shrink-0" />
+        <ChevronDown className="w-3 h-3 text-[#888] shrink-0" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
@@ -66,7 +66,7 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
             )}
             <span className="text-xs font-mono truncate">{account.name}</span>
             {account.id === activeAccountId && (
-              <span className="ml-auto text-[10px] text-[#555]">activa</span>
+              <span className="ml-auto text-[10px] text-[#888]">activa</span>
             )}
           </DropdownMenuItem>
         ))}

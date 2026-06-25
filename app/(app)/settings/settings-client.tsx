@@ -62,20 +62,20 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
     <div className="max-w-2xl space-y-8">
       <div>
         <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Settings</h1>
-        <p className="text-[#555] text-sm font-mono mt-1">
+        <p className="text-[#888] text-sm font-mono mt-1">
           {account.ad_account_name} · {account.ad_account_id}
         </p>
       </div>
 
       <section className="space-y-4">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Página y Pixel</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Página y Pixel</h2>
 
         <div className="space-y-1">
-          <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
+          <label className="text-xs font-mono text-[#888] uppercase tracking-widest">
             Facebook Page
           </label>
           {loadingPages ? (
-            <p className="text-xs font-mono text-[#555]">Cargando...</p>
+            <p className="text-xs font-mono text-[#888]">Cargando...</p>
           ) : pages.length === 0 ? (
             <p className="text-xs font-mono text-[#ef4444]">No se encontraron páginas</p>
           ) : (
@@ -100,11 +100,11 @@ export function SettingsClient({ account, defaults }: SettingsClientProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-mono text-[#555] uppercase tracking-widest">Pixel</label>
+          <label className="text-xs font-mono text-[#888] uppercase tracking-widest">Pixel</label>
           {loadingPixels ? (
-            <p className="text-xs font-mono text-[#555]">Cargando...</p>
+            <p className="text-xs font-mono text-[#888]">Cargando...</p>
           ) : pixels.length === 0 ? (
-            <p className="text-xs font-mono text-[#555]">No se encontraron pixels</p>
+            <p className="text-xs font-mono text-[#888]">No se encontraron pixels</p>
           ) : (
             <select
               value={selectedPixelId}

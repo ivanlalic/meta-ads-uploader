@@ -103,14 +103,14 @@ export function CallbackClient({
                 Reconectando cuenta:{" "}
                 <strong>{reconnectAccount.ad_account_name}</strong>
               </p>
-              <p className="text-xs font-mono text-[#555] mt-1">
+              <p className="text-xs font-mono text-[#888] mt-1">
                 La configuración y el historial se preservarán.
               </p>
             </div>
           )}
 
           <div className="space-y-1">
-            <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
+            <label className="text-xs font-mono text-[#888] uppercase tracking-widest">
               Elegí la Ad Account
             </label>
             {activeAdAccounts.length === 0 ? (
@@ -140,7 +140,7 @@ export function CallbackClient({
                       <p className="text-sm font-mono text-[#f5f5f5] truncate">
                         {account.name}
                       </p>
-                      <p className="text-xs font-mono text-[#555]">
+                      <p className="text-xs font-mono text-[#888]">
                         {account.id} · {account.currency}
                       </p>
                     </div>

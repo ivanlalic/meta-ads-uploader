@@ -91,7 +91,7 @@ export function Sidebar({ accounts, activeAccountId }: SidebarProps) {
                 tokenStatus === "red" && "bg-[#ef4444] animate-pulse"
               )}
             />
-            <span className="text-xs text-[#555] font-mono">
+            <span className="text-xs text-[#888] font-mono">
               {tokenDaysLeft}d token
             </span>
           </div>

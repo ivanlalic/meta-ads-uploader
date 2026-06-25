@@ -11,7 +11,7 @@ export default function LoginPage() {
             <span className="font-mono text-lg font-semibold">ads.uploader</span>
           </div>
           <p className="font-mono text-sm text-[#f5f5f5]">Iniciar sesión</p>
-          <p className="text-xs font-mono text-[#555]">
+          <p className="text-xs font-mono text-[#888]">
             Ingresá con tu email y contraseña
           </p>
         </div>

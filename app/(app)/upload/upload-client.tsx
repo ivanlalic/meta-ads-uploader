@@ -455,18 +455,18 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
   const inputClass = "w-full bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] placeholder:text-[#333] focus:outline-none focus:border-[#3b82f6]";
   const selectClass = "w-full bg-[#141414] border border-[#2a2a2a] rounded-md px-3 py-2 text-sm font-mono text-[#f5f5f5] focus:outline-none focus:border-[#3b82f6]";
-  const labelClass = "text-xs font-mono text-[#555] uppercase tracking-widest";
+  const labelClass = "text-xs font-mono text-[#888] uppercase tracking-widest";
 
   return (
     <div className="max-w-4xl space-y-8">
       <div>
         <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Upload</h1>
-        <p className="text-[#555] text-sm font-mono mt-1">Subir creativos y crear ads en Meta</p>
+        <p className="text-[#888] text-sm font-mono mt-1">Subir creativos y crear ads en Meta</p>
       </div>
 
       {/* Section 1: Files */}
       <section className="space-y-3">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Archivos</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Archivos</h2>
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${dragOver ? "border-[#3b82f6] bg-[#3b82f6]/5" : "border-[#2a2a2a] hover:border-[#3a3a3a]"}`}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -474,7 +474,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
           onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
           onClick={() => fileInputRef.current?.click()}
         >
-          <p className="text-sm font-mono text-[#555]">Arrastrá archivos o hacé click para seleccionar</p>
+          <p className="text-sm font-mono text-[#888]">Arrastrá archivos o hacé click para seleccionar</p>
           <p className="text-xs font-mono text-[#333] mt-1">JPG, PNG, WEBP, GIF, MP4, MOV</p>
           <input ref={fileInputRef} type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime" className="hidden" onChange={(e) => e.target.files && addFiles(e.target.files)} />
         </div>
@@ -511,12 +511,12 @@ export function UploadClient({ defaults }: UploadClientProps) {
                       </div>
                     ) : (
                       <div className="w-10 h-10 bg-[#1c1c1c] rounded flex items-center justify-center shrink-0">
-                        <FileImage className="w-5 h-5 text-[#555]" />
+                        <FileImage className="w-5 h-5 text-[#888]" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-mono text-[#f5f5f5] truncate">{file.name}</p>
-                      <p className="text-xs font-mono text-[#555]">
+                      <p className="text-xs font-mono text-[#888]">
                         {file.type.startsWith("video/") ? "Video" : "Imagen"} · {(file.size / 1024 / 1024).toFixed(1)} MB
                         {isInGroup && <span className="text-[#3b82f6] ml-2">Grupo {groupIdx + 1}</span>}
                         {(() => {
@@ -540,11 +540,11 @@ export function UploadClient({ defaults }: UploadClientProps) {
                       </select>
                     )}
                     {false && (
-                      <button onClick={() => ungroup(groupIdx)} className="text-xs font-mono text-[#555] hover:text-[#f5f5f5] transition-colors mr-2">
+                      <button onClick={() => ungroup(groupIdx)} className="text-xs font-mono text-[#888] hover:text-[#f5f5f5] transition-colors mr-2">
                         desagrupar
                       </button>
                     )}
-                    <button onClick={() => removeFile(i)} className="text-[#555] hover:text-[#ef4444] transition-colors">
+                    <button onClick={() => removeFile(i)} className="text-[#888] hover:text-[#ef4444] transition-colors">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -553,7 +553,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
             </div>
 
             {false && groups.length > 0 && (
-              <p className="text-xs font-mono text-[#555]">
+              <p className="text-xs font-mono text-[#888]">
                 {groups.length} grupo{groups.length > 1 ? "s" : ""} multi-ratio · {adItems.length} ads en total
               </p>
             )}
@@ -586,10 +586,10 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
       {/* Section 2: Destino */}
       <section className="space-y-3">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Destino</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Destino</h2>
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={onlyActive} onChange={(e) => setOnlyActive(e.target.checked)} className="accent-[#3b82f6]" />
-          <span className="text-xs font-mono text-[#555]">Solo activos</span>
+          <span className="text-xs font-mono text-[#888]">Solo activos</span>
         </label>
 
         <div className="grid grid-cols-3 gap-4">
@@ -598,11 +598,11 @@ export function UploadClient({ defaults }: UploadClientProps) {
             <label className={labelClass}>Campaña</label>
             <input type="text" placeholder="Buscar..." value={campaignSearch} onChange={(e) => setCampaignSearch(e.target.value)} className={inputClass} />
             {loadingCampaigns ? (
-              <p className="text-xs font-mono text-[#555] px-1">Cargando...</p>
+              <p className="text-xs font-mono text-[#888] px-1">Cargando...</p>
             ) : (
               <div className="border border-[#2a2a2a] rounded-md max-h-48 overflow-y-auto">
                 {filteredCampaigns.length === 0 ? (
-                  <p className="text-xs font-mono text-[#555] px-3 py-3">Sin resultados</p>
+                  <p className="text-xs font-mono text-[#888] px-3 py-3">Sin resultados</p>
                 ) : filteredCampaigns.map((c) => (
                   <button key={c.id} onClick={() => setSelectedCampaignId(c.id)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm font-mono transition-colors ${selectedCampaignId === c.id ? "bg-[#3b82f6]/10 text-[#f5f5f5]" : "text-[#aaa] hover:bg-[#1c1c1c]"}`}>
@@ -621,11 +621,11 @@ export function UploadClient({ defaults }: UploadClientProps) {
             {!selectedCampaignId ? (
               <p className="text-xs font-mono text-[#333] px-1">Seleccioná una campaña primero</p>
             ) : loadingAdsets ? (
-              <p className="text-xs font-mono text-[#555] px-1">Cargando...</p>
+              <p className="text-xs font-mono text-[#888] px-1">Cargando...</p>
             ) : (
               <div className="border border-[#2a2a2a] rounded-md max-h-48 overflow-y-auto">
                 {filteredAdsets.length === 0 ? (
-                  <p className="text-xs font-mono text-[#555] px-3 py-3">Sin resultados</p>
+                  <p className="text-xs font-mono text-[#888] px-3 py-3">Sin resultados</p>
                 ) : filteredAdsets.map((a) => (
                   <button key={a.id} onClick={() => setSelectedAdsetId(a.id)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm font-mono transition-colors ${selectedAdsetId === a.id ? "bg-[#3b82f6]/10 text-[#f5f5f5]" : "text-[#aaa] hover:bg-[#1c1c1c]"}`}>
@@ -643,9 +643,9 @@ export function UploadClient({ defaults }: UploadClientProps) {
             {!selectedAdsetId ? (
               <p className="text-xs font-mono text-[#333] px-1">Seleccioná un Ad Set primero</p>
             ) : loadingSourceAds ? (
-              <p className="text-xs font-mono text-[#555] px-1">Cargando...</p>
+              <p className="text-xs font-mono text-[#888] px-1">Cargando...</p>
             ) : sourceAds.length === 0 ? (
-              <p className="text-xs font-mono text-[#555] px-3 py-3">Sin anuncios en este Ad Set</p>
+              <p className="text-xs font-mono text-[#888] px-3 py-3">Sin anuncios en este Ad Set</p>
             ) : (
               <div className="border border-[#2a2a2a] rounded-md max-h-48 overflow-y-auto">
                 {sourceAds.map((a) => (
@@ -665,10 +665,10 @@ export function UploadClient({ defaults }: UploadClientProps) {
       {sourceCopies.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Variantes de copy ({sourceCopies.length})</h2>
+            <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Variantes de copy ({sourceCopies.length})</h2>
             <button
               onClick={() => { setSourceCopies([]); setCommonCopy({ headline: "", primaryText: "", linkDescription: "", url: "", cta: "SHOP_NOW" }); setPerAdCopy(files.map(() => ({ headline: "", primaryText: "", linkDescription: "", url: "", cta: "SHOP_NOW" }))); }}
-              className="text-xs font-mono text-[#555] hover:text-[#ef4444] transition-colors"
+              className="text-xs font-mono text-[#888] hover:text-[#ef4444] transition-colors"
             >
               Limpiar
             </button>
@@ -677,17 +677,17 @@ export function UploadClient({ defaults }: UploadClientProps) {
             <table className="w-full text-xs font-mono">
               <thead className="bg-[#141414] border-b border-[#2a2a2a]">
                 <tr>
-                  <th className="text-left px-3 py-2 text-[#555] w-8">#</th>
-                  <th className="text-left px-3 py-2 text-[#555]">Headline</th>
-                  <th className="text-left px-3 py-2 text-[#555]">Primary Text</th>
-                  <th className="text-left px-3 py-2 text-[#555]">Descripción</th>
-                  <th className="text-left px-3 py-2 text-[#555] w-24"></th>
+                  <th className="text-left px-3 py-2 text-[#888] w-8">#</th>
+                  <th className="text-left px-3 py-2 text-[#888]">Headline</th>
+                  <th className="text-left px-3 py-2 text-[#888]">Primary Text</th>
+                  <th className="text-left px-3 py-2 text-[#888]">Descripción</th>
+                  <th className="text-left px-3 py-2 text-[#888] w-24"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2a2a2a]">
                 {sourceCopies.map((c, i) => (
                   <tr key={i} className="bg-[#0a0a0a]">
-                    <td className="px-3 py-2 text-[#555] text-center">{i + 1}</td>
+                    <td className="px-3 py-2 text-[#888] text-center">{i + 1}</td>
                     <td className="px-2 py-2">
                       <input
                         type="text"
@@ -740,7 +740,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
       {/* Section 3: Copy */}
       <section className="space-y-4">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Copy</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Copy</h2>
         {!defaults?.facebook_page_id && (
           <div className="space-y-1">
             <label className={labelClass}>Página de Facebook</label>
@@ -790,7 +790,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
         ) : (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-mono text-[#555]">Editá el copy de cada ad individualmente</p>
+              <p className="text-xs font-mono text-[#888]">Editá el copy de cada ad individualmente</p>
               <button onClick={applyCommonToAll} className="text-xs font-mono text-[#3b82f6] hover:text-[#60a5fa] transition-colors">Aplicar copy común a todos</button>
             </div>
             {adItems.length === 0 ? (
@@ -800,12 +800,12 @@ export function UploadClient({ defaults }: UploadClientProps) {
                 <table className="w-full text-xs font-mono">
                   <thead className="bg-[#141414] border-b border-[#2a2a2a]">
                     <tr>
-                      <th className="text-left px-3 py-2 text-[#555] w-12">Ad</th>
-                      <th className="text-left px-3 py-2 text-[#555]">Headline</th>
-                      <th className="text-left px-3 py-2 text-[#555]">Primary Text</th>
-                      <th className="text-left px-3 py-2 text-[#555]">Descripción</th>
-                      <th className="text-left px-3 py-2 text-[#555]">URL</th>
-                      <th className="text-left px-3 py-2 text-[#555] w-28">CTA</th>
+                      <th className="text-left px-3 py-2 text-[#888] w-12">Ad</th>
+                      <th className="text-left px-3 py-2 text-[#888]">Headline</th>
+                      <th className="text-left px-3 py-2 text-[#888]">Primary Text</th>
+                      <th className="text-left px-3 py-2 text-[#888]">Descripción</th>
+                      <th className="text-left px-3 py-2 text-[#888]">URL</th>
+                      <th className="text-left px-3 py-2 text-[#888] w-28">CTA</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2a2a2a]">
@@ -820,7 +820,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
                             <div className="relative">
                               {thumb ? <img src={thumb} alt="" className="w-8 h-8 object-cover rounded" /> : (
                                 <div className="w-8 h-8 bg-[#1c1c1c] rounded flex items-center justify-center">
-                                  {isVideo ? <FileVideo className="w-4 h-4 text-[#3b82f6]" /> : <FileImage className="w-4 h-4 text-[#555]" />}
+                                  {isVideo ? <FileVideo className="w-4 h-4 text-[#3b82f6]" /> : <FileImage className="w-4 h-4 text-[#888]" />}
                                 </div>
                               )}
                               {item.type === "group" && <span className="absolute -top-1 -right-1 bg-[#3b82f6] text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">{item.members.length}</span>}
@@ -853,19 +853,19 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
       {/* Section 4: Ad Name Pattern */}
       <section className="space-y-3">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Nombre de ads</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Nombre de ads</h2>
         <div className="space-y-2">
           <input type="text" value={adNamePattern} onChange={(e) => setAdNamePattern(e.target.value)} placeholder="{filename}" className={inputClass} />
           <div className="flex gap-2 flex-wrap">
             {PATTERN_VARS.map((v) => (
               <button key={v} onClick={() => setAdNamePattern((p) => p + v)}
-                className="text-[10px] font-mono px-2 py-0.5 bg-[#141414] border border-[#2a2a2a] rounded text-[#555] hover:text-[#3b82f6] hover:border-[#3b82f6] transition-colors">
+                className="text-[10px] font-mono px-2 py-0.5 bg-[#141414] border border-[#2a2a2a] rounded text-[#888] hover:text-[#3b82f6] hover:border-[#3b82f6] transition-colors">
                 {v}
               </button>
             ))}
           </div>
           {adNamePattern && (
-            <p className="text-xs font-mono text-[#555]">
+            <p className="text-xs font-mono text-[#888]">
               Preview: <span className="text-[#aaa]">{resolvePatternPreview(adNamePattern, selectedCampaign?.name ?? "", selectedAdset?.name ?? "")}</span>
             </p>
           )}
@@ -874,19 +874,19 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
       {/* Section 5: Publication + Scheduling */}
       <section className="space-y-3">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Publicación</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Publicación</h2>
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={createPaused} onChange={(e) => { setCreatePaused(e.target.checked); if (e.target.checked) setScheduleEnabled(false); }} className="accent-[#3b82f6]" />
           <div>
             <p className="text-sm font-mono text-[#f5f5f5]">Crear ads en pausa</p>
-            <p className="text-xs font-mono text-[#555]">Activalos manualmente en Ads Manager</p>
+            <p className="text-xs font-mono text-[#888]">Activalos manualmente en Ads Manager</p>
           </div>
         </label>
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={scheduleEnabled} onChange={(e) => { setScheduleEnabled(e.target.checked); if (e.target.checked) setCreatePaused(false); }} className="accent-[#3b82f6]" />
           <div>
             <p className="text-sm font-mono text-[#f5f5f5]">Programar inicio</p>
-            <p className="text-xs font-mono text-[#555]">Ads se crean activos con fecha de inicio programada</p>
+            <p className="text-xs font-mono text-[#888]">Ads se crean activos con fecha de inicio programada</p>
           </div>
         </label>
         {scheduleEnabled && (
@@ -899,12 +899,12 @@ export function UploadClient({ defaults }: UploadClientProps) {
 
       {/* Section 6: Advantage+ */}
       <section className="space-y-2">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Ventajas creativas</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Ventajas creativas</h2>
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={advantagePlus} onChange={(e) => setAdvantagePlus(e.target.checked)} className="accent-[#3b82f6]" />
           <div>
             <p className="text-sm font-mono text-[#f5f5f5]">Creative Enhancements (Meta Defaults)</p>
-            <p className="text-xs font-mono text-[#555]">Meta aplica automáticamente mejoras básicas al creativo</p>
+            <p className="text-xs font-mono text-[#888]">Meta aplica automáticamente mejoras básicas al creativo</p>
           </div>
         </label>
       </section>
@@ -912,8 +912,8 @@ export function UploadClient({ defaults }: UploadClientProps) {
       {/* Section 7: Preview */}
       {adItems.length > 0 && selectedAdsetId && (
         <section className="space-y-3">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Preview</h2>
-          <p className="text-xs font-mono text-[#555]">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Preview</h2>
+          <p className="text-xs font-mono text-[#888]">
             Se crearán <span className="text-[#f5f5f5]">{adItems.length} ads</span> en{" "}
             <span className="text-[#f5f5f5]">{selectedAdset?.name ?? selectedAdsetId}</span>
             {selectedCampaign && <> › <span className="text-[#3b82f6]">{selectedCampaign.name}</span></>}
@@ -922,10 +922,10 @@ export function UploadClient({ defaults }: UploadClientProps) {
             <table className="w-full text-xs font-mono">
               <thead className="bg-[#141414] border-b border-[#2a2a2a]">
                 <tr>
-                  <th className="text-left px-3 py-2 text-[#555]">Nombre</th>
-                  <th className="text-left px-3 py-2 text-[#555]">Tipo</th>
-                  <th className="text-left px-3 py-2 text-[#555]">Headline</th>
-                  <th className="text-left px-3 py-2 text-[#555]">Estado</th>
+                  <th className="text-left px-3 py-2 text-[#888]">Nombre</th>
+                  <th className="text-left px-3 py-2 text-[#888]">Tipo</th>
+                  <th className="text-left px-3 py-2 text-[#888]">Headline</th>
+                  <th className="text-left px-3 py-2 text-[#888]">Estado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2a2a2a]">
@@ -939,13 +939,13 @@ export function UploadClient({ defaults }: UploadClientProps) {
                   return (
                     <tr key={i} className="bg-[#0a0a0a]">
                       <td className="px-3 py-2 text-[#f5f5f5] max-w-[160px] truncate">{resolvedName}</td>
-                      <td className="px-3 py-2 text-[#555]">{tipo}</td>
+                      <td className="px-3 py-2 text-[#888]">{tipo}</td>
                       <td className="px-3 py-2 text-[#aaa] max-w-[180px] truncate">{copy?.headline || "—"}</td>
                       <td className="px-3 py-2">
                         {result ? (
                           result.error ? <span className="text-[#ef4444]">Error</span> : <span className="text-[#10b981]">Creado</span>
                         ) : (
-                          <span className="text-[#555]">
+                          <span className="text-[#888]">
                             {scheduleEnabled && scheduledDate ? `Prog. ${scheduledDate}` : createPaused ? "Pausa" : "Activo"}
                           </span>
                         )}
@@ -977,7 +977,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
       {/* Log panel */}
       {(uploading || results.length > 0) && (
         <section className="space-y-2">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-[#555]">Log</h2>
+          <h2 className="font-mono text-xs uppercase tracking-widest text-[#888]">Log</h2>
           <div className="border border-[#2a2a2a] rounded-lg bg-[#0a0a0a] p-3 font-mono text-xs space-y-1 max-h-48 overflow-y-auto">
             {uploadStep && (
               <p className="text-[#3b82f6]">{uploadStep}</p>

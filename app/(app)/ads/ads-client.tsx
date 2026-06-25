@@ -16,7 +16,7 @@ type Ad = {
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: "text-[#10b981] bg-[#10b981]/10",
   PAUSED: "text-[#888] bg-[#555]/20",
-  ARCHIVED: "text-[#555] bg-[#333]/20",
+  ARCHIVED: "text-[#888] bg-[#333]/20",
   DELETED: "text-[#ef4444] bg-[#ef4444]/10",
   DISAPPROVED: "text-[#ef4444] bg-[#ef4444]/10",
   WITH_ISSUES: "text-[#f59e0b] bg-[#f59e0b]/10",
@@ -57,7 +57,7 @@ export function AdsClient() {
     <div className="max-w-5xl space-y-6">
       <div>
         <h1 className="font-mono text-xl font-semibold text-[#f5f5f5]">Ads</h1>
-        <p className="text-[#555] text-sm font-mono mt-1">
+        <p className="text-[#888] text-sm font-mono mt-1">
           {loading ? "Cargando..." : `${ads.length} ads en esta cuenta`}
         </p>
       </div>
@@ -84,21 +84,21 @@ export function AdsClient() {
       )}
 
       {loading ? (
-        <p className="text-[#555] text-sm font-mono">Cargando ads...</p>
+        <p className="text-[#888] text-sm font-mono">Cargando ads...</p>
       ) : ads.length === 0 ? (
-        <p className="text-[#555] text-sm font-mono">No hay ads en esta cuenta.</p>
+        <p className="text-[#888] text-sm font-mono">No hay ads en esta cuenta.</p>
       ) : filtered.length === 0 ? (
-        <p className="text-[#555] text-sm font-mono">Sin resultados para esa búsqueda.</p>
+        <p className="text-[#888] text-sm font-mono">Sin resultados para esa búsqueda.</p>
       ) : (
         <div className="border border-[#2a2a2a] rounded-lg overflow-hidden">
           <table className="w-full text-xs font-mono">
             <thead className="bg-[#141414] border-b border-[#2a2a2a]">
               <tr>
-                <th className="text-left px-4 py-3 text-[#555]">Nombre</th>
-                <th className="text-left px-4 py-3 text-[#555]">Campaña</th>
-                <th className="text-left px-4 py-3 text-[#555]">Ad Set</th>
-                <th className="text-left px-4 py-3 text-[#555]">Estado</th>
-                <th className="text-left px-4 py-3 text-[#555]">Creado</th>
+                <th className="text-left px-4 py-3 text-[#888]">Nombre</th>
+                <th className="text-left px-4 py-3 text-[#888]">Campaña</th>
+                <th className="text-left px-4 py-3 text-[#888]">Ad Set</th>
+                <th className="text-left px-4 py-3 text-[#888]">Estado</th>
+                <th className="text-left px-4 py-3 text-[#888]">Creado</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a2a]">
@@ -115,12 +115,12 @@ export function AdsClient() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-1.5 py-0.5 rounded text-[10px] ${
-                      STATUS_COLORS[ad.effective_status] ?? "text-[#555] bg-[#333]/20"
+                      STATUS_COLORS[ad.effective_status] ?? "text-[#888] bg-[#333]/20"
                     }`}>
                       {ad.effective_status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#555] whitespace-nowrap">
+                  <td className="px-4 py-3 text-[#888] whitespace-nowrap">
                     {new Date(ad.created_time).toLocaleDateString("es-AR", {
                       day: "2-digit",
                       month: "2-digit",

@@ -54,7 +54,7 @@ export function LoginForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       {mode === "register" && (
         <div className="space-y-1">
-          <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
+          <label className="text-xs font-mono text-[#888] uppercase tracking-widest">
             Nombre
           </label>
           <Input
@@ -67,7 +67,7 @@ export function LoginForm() {
         </div>
       )}
       <div className="space-y-1">
-        <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
+        <label className="text-xs font-mono text-[#888] uppercase tracking-widest">
           Email
         </label>
         <Input
@@ -80,7 +80,7 @@ export function LoginForm() {
         />
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
+        <label className="text-xs font-mono text-[#888] uppercase tracking-widest">
           Contraseña
         </label>
         <Input
@@ -105,7 +105,7 @@ export function LoginForm() {
           : "Crear cuenta"}
       </Button>
 
-      <p className="text-center text-xs font-mono text-[#555]">
+      <p className="text-center text-xs font-mono text-[#888]">
         {mode === "login" ? (
           <>
             ¿No tenés cuenta?{" "}

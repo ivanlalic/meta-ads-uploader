@@ -39,15 +39,15 @@ export default function AdminLoginPage() {
             <Shield className="w-6 h-6 text-[#f59e0b]" />
             <span className="font-mono text-lg font-semibold">Admin</span>
           </div>
-          <p className="text-[#555] text-xs font-mono">acceso restringido</p>
+          <p className="text-[#888] text-xs font-mono">acceso restringido</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-mono text-[#555] uppercase tracking-widest">Usuario</label>
+            <label className="text-xs font-mono text-[#888] uppercase tracking-widest">Usuario</label>
             <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin" className="bg-[#141414] border-[#2a2a2a] font-mono text-sm" />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-mono text-[#555] uppercase tracking-widest">Contraseña</label>
+            <label className="text-xs font-mono text-[#888] uppercase tracking-widest">Contraseña</label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="bg-[#141414] border-[#2a2a2a] font-mono text-sm" />
           </div>
           <Button type="submit" disabled={loading} className="w-full font-mono text-sm bg-[#f59e0b] hover:bg-[#fbbf24] text-black">
@@ -55,7 +55,7 @@ export default function AdminLoginPage() {
           </Button>
         </form>
         <div className="text-center">
-          <a href="/login" className="text-xs font-mono text-[#555] hover:text-[#888] underline">
+          <a href="/login" className="text-xs font-mono text-[#888] hover:text-[#888] underline">
             ← Volver al inicio
           </a>
         </div>

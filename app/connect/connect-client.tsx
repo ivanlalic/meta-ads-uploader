@@ -25,14 +25,14 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
             <Zap className="w-6 h-6 text-[#3b82f6]" />
             <span className="font-mono text-lg font-semibold">ads.uploader</span>
           </div>
-          <p className="text-[#555] text-sm font-mono">
+          <p className="text-[#888] text-sm font-mono">
             Conectá una cuenta de Meta
           </p>
         </div>
 
         {accounts.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-mono text-[#555] uppercase tracking-widest">
+            <p className="text-xs font-mono text-[#888] uppercase tracking-widest">
               Cuentas conectadas
             </p>
             <div className="border border-[#2a2a2a] rounded-md divide-y divide-[#2a2a2a]">
@@ -51,7 +51,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
                       <p className="text-sm font-mono text-[#f5f5f5]">
                         {account.ad_account_name ?? account.name}
                       </p>
-                      <p className="text-xs font-mono text-[#555]">
+                      <p className="text-xs font-mono text-[#888]">
                         {account.ad_account_id}
                       </p>
                     </div>
@@ -83,7 +83,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
               . El token y la configuración se preservarán.
             </p>
             <button
-              className="text-xs font-mono text-[#555] hover:text-[#888] mt-1 underline"
+              className="text-xs font-mono text-[#888] hover:text-[#888] mt-1 underline"
               onClick={() => setReconnectId(null)}
             >
               Cancelar
@@ -112,7 +112,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
           <div className="text-center">
             <a
               href="/dashboard"
-              className="text-xs font-mono text-[#555] hover:text-[#888] underline"
+              className="text-xs font-mono text-[#888] hover:text-[#888] underline"
             >
               ← Volver al dashboard
             </a>
