@@ -15,34 +15,8 @@ type AdCopy = {
 };
 
 type MediaRef =
-  | { type: "image"; hash: string; filename: string; width?: number; height?: number }
+  | { type: "image"; hash: string; filename: string }
   | { type: "video"; video_id: string; filename: string };
-
-function computeImageCrops(width: number, height: number): Record<string, [[number, number], [number, number]]> {
-  const crops: Record<string, [[number, number], [number, number]]> = {};
-  const keys: Record<string, number> = {
-    "100x100": 1,       // 1:1 square (Feed, Marketplace, Search, Instagram profile)
-    "400x500": 0.8,     // 4:5 portrait (Feed mobile, some placements)
-    "90x160": 0.5625,   // 9:16 portrait (Stories, Reels)
-    "600x360": 1.6667,  // ~5:3 horizontal (Right column)
-    "100x72": 1.3889,   // ~1.39:1 horizontal (Marketplace)
-    "400x150": 2.6667,  // ~2.67:1 wide banner (Audience Network)
-  };
-  for (const [key, targetRatio] of Object.entries(keys)) {
-    let x1 = 0, y1 = 0, x2 = width, y2 = height;
-    if (width / height > targetRatio) {
-      const cropWidth = Math.round(height * targetRatio);
-      x1 = Math.round((width - cropWidth) / 2);
-      x2 = x1 + cropWidth;
-    } else if (width / height < targetRatio) {
-      const cropHeight = Math.round(width / targetRatio);
-      y1 = Math.round((height - cropHeight) / 2);
-      y2 = y1 + cropHeight;
-    }
-    crops[key] = [[x1, y1], [x2, y2]];
-  }
-  return crops;
-}
 
 function resolvePattern(
   pattern: string,
@@ -78,9 +52,6 @@ async function createSingleCreative(
       description: copy.linkDescription || undefined,
       call_to_action: { type: copy.cta },
     };
-    if (media.width && media.height) {
-      linkData.image_crops = computeImageCrops(media.width, media.height);
-    }
     objectStorySpec = { page_id: pageId, link_data: linkData };
   } else {
     objectStorySpec = {

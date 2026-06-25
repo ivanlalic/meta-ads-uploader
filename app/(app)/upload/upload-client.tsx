@@ -113,7 +113,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
   const [sourceCopies, setSourceCopies] = useState<{ headline: string; primaryText: string; linkDescription: string }[]>([]);
 
   // Pre-upload media
-  const [mediaUploads, setMediaUploads] = useState<{ fileIdx: number; status: "pending" | "uploading" | "done" | "error"; type?: string; hash?: string; video_id?: string; filename?: string; error?: string; width?: number; height?: number }[]>([]);
+  const [mediaUploads, setMediaUploads] = useState<{ fileIdx: number; status: "pending" | "uploading" | "done" | "error"; type?: string; hash?: string; video_id?: string; filename?: string; error?: string }[]>([]);
 
   useEffect(() => {
     fetch("/api/meta/campaigns")
@@ -410,10 +410,10 @@ export function UploadClient({ defaults }: UploadClientProps) {
       if (failed.length > 0) {
         throw new Error(`Error en archivos: ${failed.map((e) => e.filename).join(", ")}`);
       }
-      const media: { type: "image" | "video"; hash?: string; video_id?: string; filename: string; width?: number; height?: number }[] = [];
+      const media: { type: "image" | "video"; hash?: string; video_id?: string; filename: string }[] = [];
       for (const mu of mediaUploads) {
         if (mu.status === "done" && (mu.hash || mu.video_id)) {
-          media.push({ type: mu.type as "image" | "video", hash: mu.hash, video_id: mu.video_id, filename: mu.filename ?? "", width: mu.width, height: mu.height });
+          media.push({ type: mu.type as "image" | "video", hash: mu.hash, video_id: mu.video_id, filename: mu.filename ?? "" });
         }
       }
       if (media.length === 0) {

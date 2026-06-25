@@ -4,7 +4,7 @@ import { getTokenForAccount } from "@/lib/meta/client";
 
 const BASE_URL = "https://graph.facebook.com/v25.0";
 
-async function uploadImage(adAccountId: string, token: string, file: File): Promise<{ hash: string; width: number; height: number }> {
+async function uploadImage(adAccountId: string, token: string, file: File): Promise<{ hash: string }> {
   const bytes = await file.arrayBuffer();
   const b64 = Buffer.from(bytes).toString("base64");
   const body = new URLSearchParams();
@@ -13,9 +13,8 @@ async function uploadImage(adAccountId: string, token: string, file: File): Prom
   const res = await fetch(`${BASE_URL}/${adAccountId}/adimages`, { method: "POST", body });
   const json = await res.json();
   if (json.error) throw new Error(`[${json.error.code}] ${json.error.message}`);
-  const images = json.images as Record<string, { hash: string; width: number; height: number }>;
-  const img = Object.values(images)[0];
-  return { hash: img.hash, width: img.width, height: img.height };
+  const images = json.images as Record<string, { hash: string }>;
+  return Object.values(images)[0];
 }
 
 async function uploadVideo(adAccountId: string, token: string, file: File): Promise<{ video_id: string }> {
@@ -59,8 +58,8 @@ export async function POST(req: NextRequest) {
       const { video_id } = await uploadVideo(adAccountId, token, file);
       return NextResponse.json({ type: "video", video_id, filename: file.name });
     } else {
-      const { hash, width, height } = await uploadImage(adAccountId, token, file);
-      return NextResponse.json({ type: "image", hash, filename: file.name, width, height });
+      const { hash } = await uploadImage(adAccountId, token, file);
+      return NextResponse.json({ type: "image", hash, filename: file.name });
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
