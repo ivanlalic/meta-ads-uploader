@@ -1,31 +1,21 @@
-import { auth } from "@/auth";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
-  exchangeLongLivedToken,
   getMetaUserInfo,
   getAdAccounts,
 } from "@/lib/meta/client";
 import { CallbackClient } from "./callback-client";
 import { getAccountById } from "@/app/actions/accounts";
 
-interface PageProps {
-  searchParams: Promise<{ reconnect?: string }>;
-}
+export default async function CallbackPage() {
+  const cookieStore = await cookies();
+  const longToken = cookieStore.get("fb_connect_token")?.value;
 
-export default async function CallbackPage({ searchParams }: PageProps) {
-  const session = await auth();
-  if (!session?.accessToken) redirect("/connect");
+  if (!longToken) redirect("/connect");
 
-  const params = await searchParams;
-  const reconnectId = params.reconnect ?? null;
-
-  const longLivedResult = await exchangeLongLivedToken(session.accessToken);
-  if (!longLivedResult.ok) {
-    redirect(`/connect?error=${encodeURIComponent(longLivedResult.error.message)}`);
-  }
-
-  const { access_token: longToken, expires_in } = longLivedResult.data;
-  const expiresAt = new Date(Date.now() + expires_in * 1000);
+  const reconnectId = cookieStore.get("fb_reconnect_id")?.value ?? null;
+  const expiresAtStr = cookieStore.get("fb_connect_expires")?.value;
+  const expiresAt = expiresAtStr ? new Date(Number(expiresAtStr)).toISOString() : new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString();
 
   const [userResult, adAccountsResult] = await Promise.all([
     getMetaUserInfo(longToken),
@@ -41,7 +31,7 @@ export default async function CallbackPage({ searchParams }: PageProps) {
   return (
     <CallbackClient
       longToken={longToken}
-      expiresAt={expiresAt.toISOString()}
+      expiresAt={expiresAt}
       metaUser={userResult.data}
       adAccounts={adAccountsResult.data.data}
       reconnectAccount={reconnectAccount}

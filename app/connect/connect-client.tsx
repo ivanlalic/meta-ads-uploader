@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { Zap, Plus, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Account } from "@/lib/db/schema";
@@ -14,10 +13,8 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
   const [reconnectId, setReconnectId] = useState<string | null>(null);
 
   function handleConnect() {
-    const callbackUrl = reconnectId
-      ? `/connect/callback?reconnect=${reconnectId}`
-      : "/connect/callback";
-    signIn("facebook", { callbackUrl });
+    const params = reconnectId ? `?reconnect=${reconnectId}` : "";
+    window.location.href = `/api/facebook/auth${params}`;
   }
 
   return (
@@ -29,7 +26,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
             <span className="font-mono text-lg font-semibold">ads.uploader</span>
           </div>
           <p className="text-[#555] text-sm font-mono">
-            Conectá una cuenta de agencia Meta
+            Conectá una cuenta de Meta
           </p>
         </div>
 
@@ -52,7 +49,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
                     )}
                     <div>
                       <p className="text-sm font-mono text-[#f5f5f5]">
-                        {account.name}
+                        {account.ad_account_name ?? account.name}
                       </p>
                       <p className="text-xs font-mono text-[#555]">
                         {account.ad_account_id}
@@ -81,7 +78,7 @@ export function ConnectClient({ accounts }: ConnectClientProps) {
             <p className="text-xs font-mono text-[#f59e0b]">
               Reconectando:{" "}
               <strong>
-                {accounts.find((a) => a.id === reconnectId)?.name}
+                {accounts.find((a) => a.id === reconnectId)?.ad_account_name ?? accounts.find((a) => a.id === reconnectId)?.name}
               </strong>
               . El token y la configuración se preservarán.
             </p>

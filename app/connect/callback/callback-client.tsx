@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { Account } from "@/lib/db/schema";
 
@@ -34,9 +33,6 @@ export function CallbackClient({
   const [selectedAdAccountId, setSelectedAdAccountId] = useState<string>(
     reconnectAccount?.ad_account_id ?? adAccounts[0]?.id ?? ""
   );
-  const [friendlyName, setFriendlyName] = useState(
-    reconnectAccount?.name ?? ""
-  );
   const [saving, setSaving] = useState(false);
 
   const activeAdAccounts = adAccounts.filter(
@@ -44,8 +40,8 @@ export function CallbackClient({
   );
 
   async function handleSave() {
-    if (!selectedAdAccountId || (!reconnectAccount && !friendlyName.trim())) {
-      toast.error("Completá todos los campos");
+    if (!selectedAdAccountId) {
+      toast.error("Seleccioná una ad account");
       return;
     }
 
@@ -64,7 +60,7 @@ export function CallbackClient({
           adAccountId: selectedAdAccountId,
           adAccountName: selectedAccount?.name ?? "",
           currency: selectedAccount?.currency ?? "USD",
-          friendlyName: reconnectAccount ? reconnectAccount.name : friendlyName.trim(),
+          friendlyName: "",
           reconnectId: reconnectAccount?.id ?? null,
         }),
       });
@@ -74,8 +70,8 @@ export function CallbackClient({
 
       toast.success(
         reconnectAccount
-          ? `Cuenta "${reconnectAccount.name}" reconectada`
-          : `Cuenta "${friendlyName}" conectada`
+          ? "Cuenta reconectada"
+          : `Cuenta conectada`
       );
       router.push(`/settings?account=${data.accountId}`);
     } catch (e) {
@@ -101,33 +97,21 @@ export function CallbackClient({
         </div>
 
         <div className="space-y-4">
-          {reconnectAccount ? (
+          {reconnectAccount && (
             <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/20 rounded-md px-4 py-3">
               <p className="text-xs font-mono text-[#3b82f6]">
                 Reconectando cuenta:{" "}
-                <strong>{reconnectAccount.name}</strong>
+                <strong>{reconnectAccount.ad_account_name}</strong>
               </p>
               <p className="text-xs font-mono text-[#555] mt-1">
                 La configuración y el historial se preservarán.
               </p>
             </div>
-          ) : (
-            <div className="space-y-1">
-              <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
-                Nombre de la cuenta
-              </label>
-              <Input
-                placeholder="ej: IBericaStore"
-                value={friendlyName}
-                onChange={(e) => setFriendlyName(e.target.value)}
-                className="bg-[#141414] border-[#2a2a2a] font-mono text-sm"
-              />
-            </div>
           )}
 
           <div className="space-y-1">
             <label className="text-xs font-mono text-[#555] uppercase tracking-widest">
-              Ad Account
+              Elegí la Ad Account
             </label>
             {activeAdAccounts.length === 0 ? (
               <p className="text-xs font-mono text-[#ef4444]">
@@ -172,7 +156,7 @@ export function CallbackClient({
           onClick={handleSave}
           disabled={saving || activeAdAccounts.length === 0}
         >
-          {saving ? "Guardando..." : reconnectAccount ? "Reconectar" : "Guardar y continuar"}
+          {saving ? "Guardando..." : reconnectAccount ? "Reconectar" : "Conectar cuenta"}
         </Button>
       </div>
     </div>

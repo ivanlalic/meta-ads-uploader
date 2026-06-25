@@ -19,49 +19,55 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
-  }
+  try {
+    const body = await req.json().catch(() => null);
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
 
-  const {
-    longToken,
-    expiresAt,
-    metaUserId,
-    metaUserName,
-    adAccountId,
-    adAccountName,
-    currency,
-    friendlyName,
-    reconnectId,
-  } = parsed.data;
+    const {
+      longToken,
+      expiresAt,
+      metaUserId,
+      metaUserName,
+      adAccountId,
+      adAccountName,
+      currency,
+      friendlyName,
+      reconnectId,
+    } = parsed.data;
 
-  const tokenExpiresAt = new Date(expiresAt);
+    const tokenExpiresAt = new Date(expiresAt);
 
-  if (reconnectId) {
-    const account = await updateAccountToken(reconnectId, {
-      access_token: longToken,
-      token_expires_at: tokenExpiresAt,
+    if (reconnectId) {
+      const account = await updateAccountToken(reconnectId, {
+        access_token: longToken,
+        token_expires_at: tokenExpiresAt,
+        meta_user_id: metaUserId,
+        meta_user_name: metaUserName,
+        status: "active",
+      });
+      if (!account) return NextResponse.json({ error: "Cuenta no encontrada o sin permisos" }, { status: 404 });
+      await setActiveAccount(account.id);
+      return NextResponse.json({ accountId: account.id });
+    }
+
+    const account = await createAccount({
+      name: friendlyName || adAccountName,
       meta_user_id: metaUserId,
       meta_user_name: metaUserName,
-      status: "active",
+      access_token: longToken,
+      token_expires_at: tokenExpiresAt,
+      ad_account_id: adAccountId,
+      ad_account_name: adAccountName,
+      currency,
     });
+
     await setActiveAccount(account.id);
     return NextResponse.json({ accountId: account.id });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Error interno";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const account = await createAccount({
-    name: friendlyName,
-    meta_user_id: metaUserId,
-    meta_user_name: metaUserName,
-    access_token: longToken,
-    token_expires_at: tokenExpiresAt,
-    ad_account_id: adAccountId,
-    ad_account_name: adAccountName,
-    currency,
-  });
-
-  await setActiveAccount(account.id);
-  return NextResponse.json({ accountId: account.id });
 }

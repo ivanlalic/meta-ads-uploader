@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/privacy-policy",
   "/_next/",
   "/favicon.ico",
+  "/api/facebook/",
 ];
 
 export default auth(async (req) => {
@@ -18,7 +19,7 @@ export default auth(async (req) => {
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) return;
 
   if (pathname.startsWith("/admin")) {
-    if (!isLoggedIn || req.auth?.user?.role !== "admin") {
+    if (!isLoggedIn || (req.auth?.user as { role?: string } | undefined)?.role !== "admin") {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
     return;

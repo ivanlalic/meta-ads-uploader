@@ -4,6 +4,7 @@ export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name"),
   email: text("email").unique(),
+  password_hash: text("password_hash"),
   image: text("image"),
   role: text("role").default("user"),
   created_at: timestamp("created_at").defaultNow(),
@@ -11,7 +12,7 @@ export const users = pgTable("users", {
 
 export const accounts = pgTable("accounts", {
   id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
+  name: text("name"),
   meta_user_id: text("meta_user_id"),
   meta_user_name: text("meta_user_name"),
   access_token: text("access_token").notNull(),
