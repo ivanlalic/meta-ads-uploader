@@ -288,7 +288,15 @@ export function UploadClient({ defaults }: UploadClientProps) {
         setSourceCopies(data.copies ?? []);
         const count = data.copies?.length ?? 1;
         toast.success(`Copy cargado desde el anuncio (${count} variante${count > 1 ? "s" : ""})`);
+        if (data.page_id) {
+          setPageId(data.page_id);
+          toast.success(`Página auto-seleccionada desde el anuncio fuente`);
+        }
       } else {
+        if (data.page_id) {
+          setPageId(data.page_id);
+          toast.success(`Página auto-seleccionada desde el anuncio fuente`);
+        }
         toast.error("No se pudo extraer el copy del anuncio (probablemente es multi-ratio)");
       }
     } catch (e) {

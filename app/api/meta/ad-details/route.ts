@@ -131,5 +131,6 @@ export async function GET(req: NextRequest) {
     ad.creative?.asset_feed_spec ?? null
   );
 
-  return NextResponse.json({ id: ad.id, name: ad.name, adset_id: ad.adset_id, copy });
+  const pageId = ad.creative?.object_story_spec?.page_id ?? null;
+  return NextResponse.json({ id: ad.id, name: ad.name, adset_id: ad.adset_id, page_id: pageId, copy });
 }
