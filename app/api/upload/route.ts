@@ -15,8 +15,32 @@ type AdCopy = {
 };
 
 type MediaRef =
-  | { type: "image"; hash: string; filename: string }
+  | { type: "image"; hash: string; filename: string; width?: number; height?: number }
   | { type: "video"; video_id: string; filename: string };
+
+function computeImageCrops(width: number, height: number): Record<string, [[number, number], [number, number]]> {
+  const crops: Record<string, [[number, number], [number, number]]> = {};
+  const keys: Record<string, number> = {
+    "100x100": 1,
+    "400x500": 0.8,
+    "90x160": 0.5625,
+  };
+  for (const [key, targetRatio] of Object.entries(keys)) {
+    const imageRatio = width / height;
+    let x1 = 0, y1 = 0, x2 = width, y2 = height;
+    if (imageRatio > targetRatio) {
+      const cropWidth = Math.round(height * targetRatio);
+      x1 = Math.round((width - cropWidth) / 2);
+      x2 = x1 + cropWidth;
+    } else if (imageRatio < targetRatio) {
+      const cropHeight = Math.round(width / targetRatio);
+      y1 = Math.round((height - cropHeight) / 2);
+      y2 = y1 + cropHeight;
+    }
+    crops[key] = [[x1, y1], [x2, y2]];
+  }
+  return crops;
+}
 
 function resolvePattern(
   pattern: string,
@@ -44,17 +68,18 @@ async function createSingleCreative(
 ): Promise<string> {
   let objectStorySpec: Record<string, unknown>;
   if (media.type === "image") {
-    objectStorySpec = {
-      page_id: pageId,
-      link_data: {
-        image_hash: media.hash,
-        link: copy.url,
-        message: copy.primaryText,
-        name: copy.headline,
-        description: copy.linkDescription || undefined,
-        call_to_action: { type: copy.cta },
-      },
+    const linkData: Record<string, unknown> = {
+      image_hash: media.hash,
+      link: copy.url,
+      message: copy.primaryText,
+      name: copy.headline,
+      description: copy.linkDescription || undefined,
+      call_to_action: { type: copy.cta },
     };
+    if (media.width && media.height) {
+      linkData.image_crops = computeImageCrops(media.width, media.height);
+    }
+    objectStorySpec = { page_id: pageId, link_data: linkData };
   } else {
     objectStorySpec = {
       page_id: pageId,
