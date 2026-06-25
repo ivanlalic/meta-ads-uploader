@@ -40,7 +40,8 @@ async function createSingleCreative(
   pageId: string,
   copy: AdCopy,
   media: MediaRef,
-  advantagePlus: boolean
+  advantagePlus: boolean,
+  originalCrop: boolean
 ): Promise<string> {
   let objectStorySpec: Record<string, unknown>;
   if (media.type === "image") {
@@ -69,9 +70,12 @@ async function createSingleCreative(
   }
   const body = new URLSearchParams();
   body.set("object_story_spec", JSON.stringify(objectStorySpec));
-  if (advantagePlus) {
+  const features: Record<string, unknown> = {};
+  if (advantagePlus) features.standard_enhancements = { enroll_status: "OPT_IN" };
+  if (originalCrop) features.image_cropping = { crop_type: "ORIGINAL" };
+  if (Object.keys(features).length > 0) {
     body.set("degrees_of_freedom_spec", JSON.stringify({
-      creative_features_spec: { standard_enhancements: { enroll_status: "OPT_IN" } },
+      creative_features_spec: features,
     }));
   }
   body.set("access_token", token);
@@ -90,7 +94,8 @@ async function createPlacementCreative(
   copy: AdCopy,
   members: GroupMember[],
   mediaRefs: MediaRef[],
-  advantagePlus: boolean
+  advantagePlus: boolean,
+  originalCrop: boolean
 ): Promise<string> {
   const feedMember = members.find((m) => m.placement === "feed") ?? members[0];
   const storiesMember = members.find((m) => m.placement === "stories");
@@ -99,7 +104,7 @@ async function createPlacementCreative(
 
   // No stories asset — fall back to single creative
   if (!storiesMedia) {
-    return createSingleCreative(adAccountId, token, pageId, copy, feedMedia, advantagePlus);
+    return createSingleCreative(adAccountId, token, pageId, copy, feedMedia, advantagePlus, originalCrop);
   }
 
   const FEED_LABEL = "asset_feed";
@@ -152,9 +157,12 @@ async function createPlacementCreative(
   body.set("object_story_spec", JSON.stringify({ page_id: pageId }));
   body.set("asset_feed_spec", JSON.stringify(assetFeedSpec));
 
-  if (advantagePlus) {
+  const features: Record<string, unknown> = {};
+  if (advantagePlus) features.standard_enhancements = { enroll_status: "OPT_IN" };
+  if (originalCrop) features.image_cropping = { crop_type: "ORIGINAL" };
+  if (Object.keys(features).length > 0) {
     body.set("degrees_of_freedom_spec", JSON.stringify({
-      creative_features_spec: { standard_enhancements: { enroll_status: "OPT_IN" } },
+      creative_features_spec: features,
     }));
   }
   body.set("access_token", token);
@@ -207,6 +215,7 @@ export async function POST(req: NextRequest) {
     adNamePattern: string;
     startTime?: string;
     advantagePlus: boolean;
+    originalCrop: boolean;
     groups: { fileIdx: number; placement: "feed" | "stories" }[][];
     media: MediaRef[];
   };
@@ -248,7 +257,7 @@ export async function POST(req: NextRequest) {
       try {
         let creativeId: string;
         try {
-          creativeId = await createSingleCreative(adAccountId, token, config.pageId, copy, mediaRef, config.advantagePlus);
+          creativeId = await createSingleCreative(adAccountId, token, config.pageId, copy, mediaRef, config.advantagePlus, config.originalCrop);
         } catch (e) {
           throw new Error(`creative: ${e instanceof Error ? e.message : String(e)} | page_id=${config.pageId} | adaccount=${adAccountId}`);
         }
@@ -297,7 +306,7 @@ export async function POST(req: NextRequest) {
       try {
         let creativeId: string;
         try {
-          creativeId = await createPlacementCreative(adAccountId, token, config.pageId, copy, item.members, config.media, config.advantagePlus);
+          creativeId = await createPlacementCreative(adAccountId, token, config.pageId, copy, item.members, config.media, config.advantagePlus, config.originalCrop);
         } catch (e) {
           throw new Error(`group-creative: ${e instanceof Error ? e.message : String(e)} | page_id=${config.pageId} | adaccount=${adAccountId}`);
         }
