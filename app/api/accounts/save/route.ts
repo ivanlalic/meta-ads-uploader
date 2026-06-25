@@ -4,7 +4,9 @@ import {
   createAccount,
   updateAccountToken,
   setActiveAccount,
+  getAllAccounts,
 } from "@/app/actions/accounts";
+import { getAdAccounts } from "@/lib/meta/client";
 
 const schema = z.object({
   longToken: z.string(),
@@ -65,6 +67,33 @@ export async function POST(req: NextRequest) {
     });
 
     await setActiveAccount(account.id);
+
+    // auto-import all other available ad accounts with the same token
+    try {
+      const allResult = await getAdAccounts(longToken);
+      if (allResult.ok) {
+        const existingDbAccounts = await getAllAccounts();
+        const existingIds = new Set(existingDbAccounts.map((a) => a.ad_account_id));
+        for (const acc of allResult.data.data) {
+          if (acc.account_status !== 1) continue;
+          if (acc.id === adAccountId) continue;
+          if (existingIds.has(acc.id)) continue;
+          await createAccount({
+            name: acc.name,
+            meta_user_id: metaUserId,
+            meta_user_name: metaUserName,
+            access_token: longToken,
+            token_expires_at: tokenExpiresAt,
+            ad_account_id: acc.id,
+            ad_account_name: acc.name,
+            currency: acc.currency,
+          });
+        }
+      }
+    } catch {
+      // non-critical: don't block the response
+    }
+
     return NextResponse.json({ accountId: account.id });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Error interno";
