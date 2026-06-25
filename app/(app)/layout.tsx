@@ -6,10 +6,8 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [allAccounts, activeAccountId] = await Promise.all([
-    getAllAccounts(),
-    getActiveAccountId(),
-  ]);
+  const allAccounts = await getAllAccounts().catch(() => []);
+  const activeAccountId = await getActiveAccountId();
 
   const resolvedActiveId =
     activeAccountId ?? allAccounts[0]?.id ?? null;

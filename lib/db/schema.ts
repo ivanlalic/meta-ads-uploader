@@ -1,5 +1,14 @@
 import { pgTable, uuid, text, timestamp, jsonb } from "drizzle-orm/pg-core";
 
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name"),
+  email: text("email").unique(),
+  image: text("image"),
+  role: text("role").default("user"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 export const accounts = pgTable("accounts", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
@@ -11,6 +20,7 @@ export const accounts = pgTable("accounts", {
   ad_account_name: text("ad_account_name"),
   currency: text("currency"),
   status: text("status").default("active"),
+  user_id: uuid("user_id").references(() => users.id),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -52,6 +62,8 @@ export const upload_history = pgTable("upload_history", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 export type Account = typeof accounts.$inferSelect;
 export type NewAccount = typeof accounts.$inferInsert;
 export type AccountDefaults = typeof account_defaults.$inferSelect;

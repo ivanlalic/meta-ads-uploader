@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default async function DashboardPage() {
   const [allAccounts, activeId] = await Promise.all([
-    getAllAccounts(),
+    getAllAccounts().catch(() => []),
     getActiveAccountId(),
   ]);
 

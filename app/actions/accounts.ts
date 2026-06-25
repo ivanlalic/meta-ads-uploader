@@ -3,11 +3,18 @@
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { accounts, account_defaults } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { encrypt } from "@/lib/crypto";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 const ACTIVE_ACCOUNT_COOKIE = "active_account_id";
+
+async function requireUserId(): Promise<string> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Not authenticated");
+  return session.user.id;
+}
 
 export async function getActiveAccountId(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -27,11 +34,21 @@ export async function setActiveAccount(accountId: string) {
 }
 
 export async function getAllAccounts() {
-  return db.select().from(accounts).orderBy(accounts.created_at);
+  const userId = await requireUserId();
+  return db
+    .select()
+    .from(accounts)
+    .where(eq(accounts.user_id, userId))
+    .orderBy(accounts.created_at);
 }
 
 export async function getAccountById(id: string) {
-  const rows = await db.select().from(accounts).where(eq(accounts.id, id)).limit(1);
+  const userId = await requireUserId();
+  const rows = await db
+    .select()
+    .from(accounts)
+    .where(and(eq(accounts.id, id), eq(accounts.user_id, userId)))
+    .limit(1);
   return rows[0] ?? null;
 }
 
@@ -45,11 +62,13 @@ export async function createAccount(data: {
   ad_account_name: string;
   currency: string;
 }) {
+  const userId = await requireUserId();
   const encryptedToken = await encrypt(data.access_token);
   const rows = await db
     .insert(accounts)
     .values({
       ...data,
+      user_id: userId,
       access_token: encryptedToken,
       status: "active",
     })
@@ -67,6 +86,7 @@ export async function updateAccountToken(
     status?: string;
   }
 ) {
+  const userId = await requireUserId();
   const encryptedToken = await encrypt(data.access_token);
   const rows = await db
     .update(accounts)
@@ -78,20 +98,24 @@ export async function updateAccountToken(
       status: "active",
       updated_at: new Date(),
     })
-    .where(eq(accounts.id, accountId))
+    .where(and(eq(accounts.id, accountId), eq(accounts.user_id, userId)))
     .returning();
   return rows[0];
 }
 
 export async function markAccountDisconnected(accountId: string) {
+  const userId = await requireUserId();
   await db
     .update(accounts)
     .set({ status: "disconnected", updated_at: new Date() })
-    .where(eq(accounts.id, accountId));
+    .where(and(eq(accounts.id, accountId), eq(accounts.user_id, userId)));
   revalidatePath("/", "layout");
 }
 
 export async function getAccountDefaults(accountId: string) {
+  const userId = await requireUserId();
+  const acc = await getAccountById(accountId);
+  if (!acc) return null;
   const rows = await db
     .select()
     .from(account_defaults)
@@ -104,6 +128,8 @@ export async function upsertAccountDefaults(
   accountId: string,
   data: Partial<typeof account_defaults.$inferInsert>
 ) {
+  const acc = await getAccountById(accountId);
+  if (!acc) throw new Error("Account not found");
   const existing = await getAccountDefaults(accountId);
   if (existing) {
     const rows = await db
