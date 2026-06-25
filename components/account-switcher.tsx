@@ -24,7 +24,7 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
 
   async function handleSwitch(id: string) {
     await setActiveAccount(id);
-    router.refresh();
+    window.location.reload();
   }
 
   return (
