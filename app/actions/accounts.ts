@@ -2,8 +2,8 @@
 
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
-import { accounts, account_defaults } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { accounts, account_defaults, upload_history } from "@/lib/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { encrypt } from "@/lib/crypto";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
@@ -33,8 +33,83 @@ export async function setActiveAccount(accountId: string) {
   revalidatePath("/", "layout");
 }
 
+async function dedupeAccounts(userId: string) {
+  const all = await db
+    .select()
+    .from(accounts)
+    .where(eq(accounts.user_id, userId));
+
+  const groups = new Map<string, typeof all>();
+  for (const row of all) {
+    const list = groups.get(row.ad_account_id) ?? [];
+    list.push(row);
+    groups.set(row.ad_account_id, list);
+  }
+
+  const cookieStore = await cookies();
+  const activeId = cookieStore.get(ACTIVE_ACCOUNT_COOKIE)?.value;
+  let nextActiveId = activeId ?? null;
+
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    group.sort((a, b) => {
+      const ta = a.updated_at?.getTime() ?? a.created_at?.getTime() ?? 0;
+      const tb = b.updated_at?.getTime() ?? b.created_at?.getTime() ?? 0;
+      return tb - ta;
+    });
+    const keeper = group[0];
+    const extraIds = group.slice(1).map((r) => r.id);
+
+    await db
+      .update(upload_history)
+      .set({ account_id: keeper.id })
+      .where(inArray(upload_history.account_id, extraIds));
+
+    for (const extra of group.slice(1)) {
+      const extraDefaults = await db
+        .select()
+        .from(account_defaults)
+        .where(eq(account_defaults.account_id, extra.id))
+        .limit(1);
+      if (extraDefaults.length === 0) continue;
+      const keeperDefaults = await db
+        .select()
+        .from(account_defaults)
+        .where(eq(account_defaults.account_id, keeper.id))
+        .limit(1);
+      if (keeperDefaults.length === 0) {
+        await db
+          .update(account_defaults)
+          .set({ account_id: keeper.id, updated_at: new Date() })
+          .where(eq(account_defaults.id, extraDefaults[0].id));
+      } else {
+        await db
+          .delete(account_defaults)
+          .where(eq(account_defaults.id, extraDefaults[0].id));
+      }
+    }
+
+    if (nextActiveId && extraIds.includes(nextActiveId)) {
+      nextActiveId = keeper.id;
+    }
+
+    await db.delete(accounts).where(inArray(accounts.id, extraIds));
+  }
+
+  if (nextActiveId && nextActiveId !== activeId) {
+    cookieStore.set(ACTIVE_ACCOUNT_COOKIE, nextActiveId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+      path: "/",
+    });
+  }
+}
+
 export async function getAllAccounts() {
   const userId = await requireUserId();
+  await dedupeAccounts(userId);
   return db
     .select()
     .from(accounts)
@@ -64,6 +139,32 @@ export async function createAccount(data: {
 }) {
   const userId = await requireUserId();
   const encryptedToken = await encrypt(data.access_token);
+
+  const existing = await db
+    .select()
+    .from(accounts)
+    .where(and(eq(accounts.user_id, userId), eq(accounts.ad_account_id, data.ad_account_id)))
+    .limit(1);
+
+  if (existing[0]) {
+    const rows = await db
+      .update(accounts)
+      .set({
+        name: data.name || existing[0].name,
+        meta_user_id: data.meta_user_id,
+        meta_user_name: data.meta_user_name,
+        access_token: encryptedToken,
+        token_expires_at: data.token_expires_at,
+        ad_account_name: data.ad_account_name,
+        currency: data.currency,
+        status: "active",
+        updated_at: new Date(),
+      })
+      .where(eq(accounts.id, existing[0].id))
+      .returning();
+    return rows[0];
+  }
+
   const rows = await db
     .insert(accounts)
     .values({

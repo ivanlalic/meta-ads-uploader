@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -10,21 +10,25 @@ export const users = pgTable("users", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-export const accounts = pgTable("accounts", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name"),
-  meta_user_id: text("meta_user_id"),
-  meta_user_name: text("meta_user_name"),
-  access_token: text("access_token").notNull(),
-  token_expires_at: timestamp("token_expires_at"),
-  ad_account_id: text("ad_account_id").notNull(),
-  ad_account_name: text("ad_account_name"),
-  currency: text("currency"),
-  status: text("status").default("active"),
-  user_id: uuid("user_id").references(() => users.id),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
+export const accounts = pgTable(
+  "accounts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name"),
+    meta_user_id: text("meta_user_id"),
+    meta_user_name: text("meta_user_name"),
+    access_token: text("access_token").notNull(),
+    token_expires_at: timestamp("token_expires_at"),
+    ad_account_id: text("ad_account_id").notNull(),
+    ad_account_name: text("ad_account_name"),
+    currency: text("currency"),
+    status: text("status").default("active"),
+    user_id: uuid("user_id").references(() => users.id),
+    created_at: timestamp("created_at").defaultNow(),
+    updated_at: timestamp("updated_at").defaultNow(),
+  },
+  (t) => [uniqueIndex("accounts_user_ad_account_idx").on(t.user_id, t.ad_account_id)]
+);
 
 export const account_defaults = pgTable("account_defaults", {
   id: uuid("id").defaultRandom().primaryKey(),
