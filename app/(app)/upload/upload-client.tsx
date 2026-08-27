@@ -396,11 +396,6 @@ export function UploadClient({ defaults }: UploadClientProps) {
     const copies = copyMode === "common" ? adItems.map(() => commonCopy) : adItems.map((_, i) => perAdCopy[i] ?? commonCopy);
     if (copies.some((c) => !c.headline || !c.url)) { toast.error("Completá headline y URL en todos los ads"); return; }
 
-    let startTime: string | undefined;
-    if (scheduleEnabled && scheduledDate) {
-      startTime = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
-    }
-
     setUploading(true);
     setUploadStep("");
     setResults([]);
@@ -438,10 +433,9 @@ export function UploadClient({ defaults }: UploadClientProps) {
           campaignName: selectedCampaign?.name ?? "",
           adsetName: selectedAdset?.name ?? "",
           pageId,
-          status: (scheduleEnabled && scheduledDate) ? "ACTIVE" : (createPaused ? "PAUSED" : "ACTIVE"),
+          status: (createPaused || scheduleEnabled) ? "PAUSED" : "ACTIVE",
           copies,
           adNamePattern,
-          startTime,
           advantagePlus,
           groups,
           media,
@@ -894,13 +888,16 @@ export function UploadClient({ defaults }: UploadClientProps) {
           <input type="checkbox" checked={scheduleEnabled} onChange={(e) => { setScheduleEnabled(e.target.checked); if (e.target.checked) setCreatePaused(false); }} className="accent-[#3b82f6]" />
           <div>
             <p className="text-sm font-mono text-foreground">Programar inicio</p>
-            <p className="text-xs font-mono text-[#888]">Ads se crean activos con fecha de inicio programada</p>
+            <p className="text-xs font-mono text-[#888]">Los ads se crean en pausa. Meta programa el inicio a nivel de ad set</p>
           </div>
         </label>
         {scheduleEnabled && (
-          <div className="flex gap-3 pl-7">
-            <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} min={new Date().toISOString().split("T")[0]} className="bg-card border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-[#3b82f6]" />
-            <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="bg-card border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-[#3b82f6]" />
+          <div className="flex flex-col gap-2 pl-7">
+            <div className="flex gap-3">
+              <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} min={new Date().toISOString().split("T")[0]} className="bg-card border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-[#3b82f6]" />
+              <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="bg-card border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-[#3b82f6]" />
+            </div>
+            <p className="text-xs font-mono text-destructive">La fecha de inicio se aplica al ad set seleccionado, no a ads individuales.</p>
           </div>
         )}
       </section>
@@ -954,7 +951,7 @@ export function UploadClient({ defaults }: UploadClientProps) {
                           result.error ? <span className="text-destructive">Error</span> : <span className="text-success">Creado</span>
                         ) : (
                           <span className="text-[#888]">
-                            {scheduleEnabled && scheduledDate ? `Prog. ${scheduledDate}` : createPaused ? "Pausa" : "Activo"}
+                            {scheduleEnabled && scheduledDate ? `Pausa (prog. ${scheduledDate})` : createPaused ? "Pausa" : "Activo"}
                           </span>
                         )}
                       </td>

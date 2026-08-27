@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 const FB_AUTH_URL = "https://www.facebook.com/v25.0/dialog/oauth";
-const SCOPE = "ads_management,ads_read,pages_read_engagement,pages_manage_ads,business_management";
+const SCOPE = "ads_management,ads_read,pages_show_list,pages_read_engagement,pages_manage_ads,business_management";
 
 export async function GET(req: NextRequest) {
   const state = crypto.randomUUID();

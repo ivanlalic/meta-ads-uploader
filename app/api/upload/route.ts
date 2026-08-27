@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAccountId, getAccountById } from "@/app/actions/accounts";
-import { getTokenForAccount } from "@/lib/meta/client";
+import { getTokenForAccount, resolveInstagramActorId } from "@/lib/meta/client";
 import { db } from "@/lib/db";
 import { upload_history } from "@/lib/db/schema";
 
@@ -34,13 +34,33 @@ function resolvePattern(
     .replace(/\{adset\}/g, adsetName);
 }
 
+function advantagePlusSpec(): string {
+  return JSON.stringify({
+    creative_features_spec: {
+      adapt_to_placement: { enroll_status: "OPT_IN" },
+      image_touchups: { enroll_status: "OPT_IN" },
+      inline_comment: { enroll_status: "OPT_IN" },
+      video_uncrop: { enroll_status: "OPT_IN" },
+    },
+  });
+}
+
+function withInstagram(objectStorySpec: Record<string, unknown>, instagramUserId?: string | null) {
+  if (instagramUserId) {
+    objectStorySpec.instagram_user_id = instagramUserId;
+  }
+  return objectStorySpec;
+}
+
 async function createSingleCreative(
   adAccountId: string,
   token: string,
   pageId: string,
   copy: AdCopy,
   media: MediaRef,
-  advantagePlus: boolean
+  advantagePlus: boolean,
+  name: string,
+  instagramUserId?: string | null
 ): Promise<string> {
   let objectStorySpec: Record<string, unknown>;
   if (media.type === "image") {
@@ -50,7 +70,7 @@ async function createSingleCreative(
       message: copy.primaryText,
       name: copy.headline,
       description: copy.linkDescription || undefined,
-      call_to_action: { type: copy.cta },
+      call_to_action: { type: copy.cta, value: { link: copy.url } },
     };
     objectStorySpec = { page_id: pageId, link_data: linkData };
   } else {
@@ -66,12 +86,12 @@ async function createSingleCreative(
       },
     };
   }
+  withInstagram(objectStorySpec, instagramUserId);
   const body = new URLSearchParams();
+  body.set("name", name);
   body.set("object_story_spec", JSON.stringify(objectStorySpec));
   if (advantagePlus) {
-    body.set("degrees_of_freedom_spec", JSON.stringify({
-      creative_features_spec: { standard_enhancements: { enroll_status: "OPT_IN" } },
-    }));
+    body.set("degrees_of_freedom_spec", advantagePlusSpec());
   }
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/adcreatives`, { method: "POST", body });
@@ -93,7 +113,9 @@ async function createPlacementCreative(
   copy: AdCopy,
   members: GroupMember[],
   mediaRefs: MediaRef[],
-  advantagePlus: boolean
+  advantagePlus: boolean,
+  name: string,
+  instagramUserId?: string | null
 ): Promise<string> {
   const feedMember = members.find((m) => m.placement === "feed") ?? members[0];
   const storiesMember = members.find((m) => m.placement === "stories");
@@ -102,7 +124,7 @@ async function createPlacementCreative(
 
   // No stories asset — fall back to single creative
   if (!storiesMedia) {
-    return createSingleCreative(adAccountId, token, pageId, copy, feedMedia, advantagePlus);
+    return createSingleCreative(adAccountId, token, pageId, copy, feedMedia, advantagePlus, name, instagramUserId);
   }
 
   const FEED_LABEL = "asset_feed";
@@ -151,14 +173,16 @@ async function createPlacementCreative(
   if (images.length > 0) assetFeedSpec.images = images;
   if (videos.length > 0) assetFeedSpec.videos = videos;
 
+  const objectStorySpec: Record<string, unknown> = { page_id: pageId };
+  withInstagram(objectStorySpec, instagramUserId);
+
   const body = new URLSearchParams();
-  body.set("object_story_spec", JSON.stringify({ page_id: pageId }));
+  body.set("name", name);
+  body.set("object_story_spec", JSON.stringify(objectStorySpec));
   body.set("asset_feed_spec", JSON.stringify(assetFeedSpec));
 
   if (advantagePlus) {
-    body.set("degrees_of_freedom_spec", JSON.stringify({
-      creative_features_spec: { standard_enhancements: { enroll_status: "OPT_IN" } },
-    }));
+    body.set("degrees_of_freedom_spec", advantagePlusSpec());
   }
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/adcreatives`, { method: "POST", body });
@@ -177,15 +201,13 @@ async function createAd(
   adsetId: string,
   creativeId: string,
   name: string,
-  status: "ACTIVE" | "PAUSED",
-  startTime?: string
+  status: "ACTIVE" | "PAUSED"
 ): Promise<string> {
   const body = new URLSearchParams();
   body.set("name", name);
   body.set("adset_id", adsetId);
   body.set("creative", JSON.stringify({ creative_id: creativeId }));
   body.set("status", status);
-  if (startTime) body.set("start_time", startTime);
   body.set("access_token", token);
   const res = await fetch(`${BASE_URL}/${adAccountId}/ads`, { method: "POST", body });
   const json = await res.json();
@@ -216,7 +238,6 @@ export async function POST(req: NextRequest) {
     status: "ACTIVE" | "PAUSED";
     copies: AdCopy[];
     adNamePattern: string;
-    startTime?: string;
     advantagePlus: boolean;
     groups: { fileIdx: number; placement: "feed" | "stories" }[][];
     media: MediaRef[];
@@ -225,6 +246,8 @@ export async function POST(req: NextRequest) {
   if (!config.media || config.media.length === 0) {
     return NextResponse.json({ error: "No media" }, { status: 400 });
   }
+
+  const instagramUserId = await resolveInstagramActorId(token, config.pageId);
 
   const adAccountId = account.ad_account_id;
   const results: { name: string; adId: string | null; error: string | null }[] = [];
@@ -259,13 +282,13 @@ export async function POST(req: NextRequest) {
       try {
         let creativeId: string;
         try {
-          creativeId = await createSingleCreative(adAccountId, token, config.pageId, copy, mediaRef, config.advantagePlus);
+          creativeId = await createSingleCreative(adAccountId, token, config.pageId, copy, mediaRef, config.advantagePlus, adName, instagramUserId);
         } catch (e) {
           throw new Error(`creative: ${e instanceof Error ? e.message : String(e)} | page_id=${config.pageId} | adaccount=${adAccountId}`);
         }
         let adId: string;
         try {
-          adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
+          adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status);
         } catch (e) {
           throw new Error(`ad: ${e instanceof Error ? e.message : String(e)} | adset=${config.adsetId} | creative=${creativeId} | adaccount=${adAccountId}`);
         }
@@ -308,13 +331,13 @@ export async function POST(req: NextRequest) {
       try {
         let creativeId: string;
         try {
-          creativeId = await createPlacementCreative(adAccountId, token, config.pageId, copy, item.members, config.media, config.advantagePlus);
+          creativeId = await createPlacementCreative(adAccountId, token, config.pageId, copy, item.members, config.media, config.advantagePlus, adName, instagramUserId);
         } catch (e) {
           throw new Error(`group-creative: ${e instanceof Error ? e.message : String(e)} | page_id=${config.pageId} | adaccount=${adAccountId}`);
         }
         let adId: string;
         try {
-          adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status, config.startTime);
+          adId = await createAd(adAccountId, token, config.adsetId, creativeId, adName, config.status);
         } catch (e) {
           throw new Error(`group-ad: ${e instanceof Error ? e.message : String(e)} | adset=${config.adsetId} | creative=${creativeId} | adaccount=${adAccountId}`);
         }
